@@ -1,9 +1,21 @@
-import { redirect } from "next/navigation";
+import { Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { Button } from "@/components/ui/button";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { LogoutButton } from "@/app/dashboard/logout-button";
-import { Wallet } from "lucide-react";
+import { BolsaCard } from "@/app/dashboard/_components/bolsa-card";
+import { BolsaEmpty } from "@/app/dashboard/_components/bolsa-empty";
+import { NuevaBolsaButton } from "@/app/dashboard/_components/nueva-bolsa-button";
+
+interface BolsaListItem {
+  id: string;
+  nombre: string;
+  descripcion: string | null;
+  color: string;
+  icono: string | null;
+  moneda: string;
+  es_general: boolean;
+  meta_habilitada: boolean;
+  meta_monto: string | null;
+  created_by: string;
+}
 
 export default async function DashboardPage() {
   const supabase = createClient();
@@ -11,42 +23,64 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) redirect("/login");
+  const { data: bolsas, error } = await supabase
+    .from("bolsas")
+    .select(
+      "id, nombre, descripcion, color, icono, moneda, es_general, meta_habilitada, meta_monto, created_by",
+    )
+    .eq("archivada", false)
+    .order("es_general", { ascending: false })
+    .order("created_at", { ascending: true })
+    .returns<BolsaListItem[]>();
+
+  const items = bolsas ?? [];
 
   return (
-    <main className="min-h-dvh">
-      <header className="container flex items-center justify-between py-6">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-primary" />
-          <span className="text-lg font-semibold tracking-tight">Bolsas</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="hidden text-sm text-muted-foreground md:inline">
-            {user.email}
-          </span>
-          <ThemeToggle />
-          <LogoutButton />
-        </div>
-      </header>
-
-      <section className="container py-12">
-        <div className="mx-auto max-w-2xl rounded-lg border bg-card p-8 text-center">
-          <div className="mx-auto mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <Wallet className="h-6 w-6" />
-          </div>
-          <h1 className="text-2xl font-semibold">Ya estás dentro</h1>
-          <p className="mt-2 text-muted-foreground">
-            El sistema de bolsas se activará cuando conectemos el proyecto
-            Supabase. Sigue las instrucciones del README para provisionar la
-            base de datos y las variables de entorno.
+    <div className="space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Mis bolsas</h1>
+          <p className="text-sm text-muted-foreground">
+            Solo ves tus bolsas personales y la Bolsa General.
           </p>
-          <div className="mt-6 flex justify-center">
-            <Button variant="outline" disabled>
-              Ver mis bolsas (próximo PR)
-            </Button>
-          </div>
         </div>
-      </section>
-    </main>
+        <NuevaBolsaButton>
+          <Plus className="mr-2 h-4 w-4" />
+          Nueva bolsa
+        </NuevaBolsaButton>
+      </div>
+
+      {error && (
+        <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">
+          <p className="font-medium">No pudimos cargar las bolsas.</p>
+          <p className="mt-1 text-xs opacity-80">{error.message}</p>
+          <p className="mt-2 text-xs">
+            ¿Ya aplicaste las migraciones de <code>supabase/apply_all.sql</code>?
+          </p>
+        </div>
+      )}
+
+      {items.length === 0 && !error ? (
+        <BolsaEmpty />
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {items.map((b) => (
+            <BolsaCard
+              key={b.id}
+              id={b.id}
+              nombre={b.nombre}
+              descripcion={b.descripcion}
+              color={b.color}
+              icono={b.icono}
+              moneda={b.moneda}
+              esGeneral={b.es_general}
+              esMio={b.created_by === user?.id}
+              metaHabilitada={b.meta_habilitada}
+              metaMonto={b.meta_monto ? Number(b.meta_monto) : null}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
