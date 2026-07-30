@@ -1,0 +1,34 @@
+import Link from "next/link";
+import { LoginForm } from "@/app/login/login-form";
+import { ThemeToggle } from "@/components/theme-toggle";
+
+export const metadata = {
+  title: "Entrar — Bolsas",
+};
+
+export default function LoginPage() {
+  return (
+    <main className="min-h-dvh">
+      <header className="container flex items-center justify-between py-6">
+        <Link href="/" className="flex items-center gap-2">
+          <div className="h-8 w-8 rounded-lg bg-primary" />
+          <span className="text-lg font-semibold tracking-tight">Bolsas</span>
+        </Link>
+        <ThemeToggle />
+      </header>
+      <div className="container flex justify-center py-12 md:py-24">
+        <div className="w-full max-w-sm">
+          <div className="mb-6 space-y-1 text-center">
+            <h1 className="text-2xl font-semibold tracking-tight">
+              Bienvenido de vuelta
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Te enviaremos un enlace mágico a tu correo para entrar.
+            </p>
+          </div>
+          <LoginForm />
+        </div>
+      </div>
+    </main>
+  );
+}
