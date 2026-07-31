@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { BolsaCard } from "@/app/dashboard/_components/bolsa-card";
 import { BolsaEmpty } from "@/app/dashboard/_components/bolsa-empty";
 import { NuevaBolsaButton } from "@/app/dashboard/_components/nueva-bolsa-button";
+import { PendientesAprobacion } from "@/app/dashboard/_components/pendientes-aprobacion";
 
 interface BolsaListItem {
   id: string;
@@ -51,6 +52,8 @@ export default async function DashboardPage() {
           Nueva bolsa
         </NuevaBolsaButton>
       </div>
+
+      <PendientesAprobacion />
 
       {error && (
         <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">

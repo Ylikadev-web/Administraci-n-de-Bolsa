@@ -199,6 +199,17 @@ export function LoginForm() {
             ? "Si usas correos ficticios internos, este es el método correcto."
             : "Usa esta opción si tu correo es real y quieres recibir un enlace."}
         </p>
+
+        {method === "password" && (
+          <div className="rounded-md border border-dashed bg-muted/30 p-3 text-left text-xs text-muted-foreground">
+            <p className="font-medium text-foreground">Cuentas de prueba</p>
+            <ul className="mt-1 space-y-0.5 font-mono">
+              <li>nesim@bolsa.com / nesim-bolsa-2026</li>
+              <li>moises@bolsa.com / moises-bolsa-2026</li>
+              <li>itzyk@bolsa.com / itzyk-bolsa-2026</li>
+            </ul>
+          </div>
+        )}
       </form>
     </div>
   );
