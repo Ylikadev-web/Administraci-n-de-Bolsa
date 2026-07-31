@@ -1,127 +1,69 @@
-# Resumen del proyecto — Bolsas
+# Resumen del proyecto — Bolsas (v2)
+
+> Versión ejecutiva del documento. La versión completa con preguntas
+> abiertas está en [`Bolsas-Resumen.pdf`](./Bolsas-Resumen.pdf).
 
 ![Diagrama de flujo del sistema](./diagrama-flujo-sistema.png)
 
 ## Qué es
 
-**Bolsas** es una webapp de gestión financiera compartida diseñada para
-un grupo cerrado de **tres usuarios** (Nesim, Moisés e Itzyk).
+**Bolsas** es una aplicación web para gestionar finanzas compartidas
+entre miembros de un grupo. Cada persona maneja sus propias bolsas
+privadas y todos comparten una **Bolsa General cuyos movimientos
+requieren aprobación del administrador**.
 
-Combina dos ideas que normalmente están separadas:
+**Nesim es el administrador del sistema.** Solo él puede agregar nuevos
+usuarios y solo él autoriza los movimientos de la Bolsa General.
 
-- **Finanzas personales privadas**: cada usuario administra sus propios
-  "sobres virtuales" (bolsas) para organizar su dinero. Ni el saldo ni
-  los movimientos de una bolsa personal son visibles para los otros.
-- **Fondo compartido con transparencia total**: existe una **Bolsa
-  General** que los tres gestionan en conjunto, y donde cada movimiento
-  queda registrado con el nombre de quien lo hizo.
+## Qué cambió respecto a la v1
 
-Encima de eso, la aplicación permite **aportar** dinero a la bolsa de
-otro usuario con una razón contable formal (préstamo, reembolso, etc.),
-y lleva de forma automática el estado de cuentas entre los tres.
+- **No existe "Retiro externo".** El efectivo que un usuario saca se
+  registra como gasto en la categoría correspondiente.
+- **No existe la naturaleza "Adelanto"** en aportes.
+- **Nesim = Administrador.** Puede agregar usuarios, aprueba/rechaza
+  movimientos de la Bolsa General y configura el umbral de saldo bajo
+  de la General.
+- **Aprobación obligatoria en Bolsa General.** Todo movimiento pasa por
+  la bandeja de Nesim. Rechazo exige motivo escrito. Los movimientos
+  del propio Nesim se auto-aprueban.
+- **Sub-bolsas.** Cada bolsa puede tener sub-bolsas con las mismas
+  propiedades.
+- **Préstamos con plazo.** Los aportes entre usuarios son préstamos por
+  defecto y se registran con plazo (7, 15, 30, 60 días o personalizado).
+  El sistema lleva la contabilidad de cada préstamo con vencimiento.
+- **Fecha de solicitud + fecha de ejecución** en cada movimiento.
+- **Alerta de saldo bajo solo aplica a la Bolsa General.**
+- **Categorías totalmente editables** por los usuarios: crear, editar y
+  desactivar. Los movimientos históricos preservan la categoría con la
+  que se registraron.
+- **Reportes configurables** por bolsa, sub-bolsa, categoría, tipo,
+  autor, rango de fechas y estado.
+- **No hay topes presupuestales** en esta versión.
 
-## Cómo funciona en 6 puntos
+## Reglas de oro
 
-1. **Autenticación por Magic Link**. Cada usuario entra con su correo,
-   no hay contraseñas que gestionar.
-2. **Cada bolsa tiene un dueño**. La creación de una bolsa personal la
-   convierte automáticamente en privada de su dueño. La Bolsa General
-   se crea una única vez y sus tres co-dueños son los usuarios reales.
-3. **Movimientos con 7 tipos claros**: `saldo_apertura`, `ingreso`,
-   `gasto`, `transferencia_interna` (entre mis bolsas), `aporte_enviado`,
-   `aporte_recibido`, `retiro_externo` (dinero al mundo real que no es
-   gasto). Cada uno con signo contable definido.
-4. **Aportar a otro usuario** exige elegir **naturaleza**: `prestamo`,
-   `pago_deuda`, `reembolso`, `cooperacion`, `adelanto`. A partir de eso
-   el sistema mantiene solo el balance neto entre pares (deudas).
-5. **Nada se elimina**: los movimientos se **anulan** con motivo, autor
-   y timestamp. Las bolsas se **archivan** (requieren saldo = 0).
-6. **Saldos calculados**: nunca se almacenan. Se derivan de los
-   movimientos activos mediante la función `saldo_bolsa()`. Imposible
-   que se desincronicen.
+- Privacidad primero: cada dueño solo ve su bolsa y sub-bolsas.
+- La Bolsa General es visible para todos sus co-dueños; todo pasa por
+  Nesim.
+- Aportar sí, retirar de bolsa ajena no.
+- Nada se elimina: los movimientos se anulan, las bolsas se archivan
+  (con saldo cero).
+- Los saldos se calculan a partir de los movimientos activos, nunca se
+  guardan como número fijo.
+- Auditoría completa con autor y hora en cada acción.
 
-## Privacidad y seguridad
+## Preguntas abiertas para cerrar
 
-- **Row Level Security (RLS)** activa en todas las tablas. La política
-  de privacidad vive en Postgres, no en el frontend.
-- Un usuario **no puede leer ni escribir** en una bolsa donde no es
-  miembro, ni siquiera si conoce el UUID.
-- La Bolsa General es visible por sus co-dueños y solo por ellos.
-- Todas las operaciones sensibles (transferencias, aportes, anulaciones,
-  archivar bolsa) pasan por funciones `SECURITY DEFINER` con validación
-  explícita: monto, contraparte, autoría, saldo suficiente.
-- Bitácora completa en `public.auditoria` con autor, timestamp y
-  contexto JSON.
+Ver la sección **"Preguntas abiertas para cerrar el modelo"** en el
+[PDF](./Bolsas-Resumen.pdf). Son 10 decisiones puntuales sobre:
 
-## Stack técnico
-
-| Capa | Tecnología |
-|---|---|
-| Frontend | Next.js 14 (App Router), TypeScript, Tailwind, shadcn/ui |
-| Estado / Data | TanStack Query, React Hook Form, Zod |
-| Backend | Supabase (Postgres + Auth + RLS + Realtime + Storage) |
-| Notificaciones | Resend (correo), Bot de Telegram propio, Twilio/Meta (WhatsApp fase 3) |
-| Hosting | Vercel |
-
-## Modelo contable resumido
-
-- **Bolsas** = sobres virtuales. Pueden tener meta de ahorro y toggle de
-  saldo negativo permitido (útil si representa una tarjeta de crédito).
-- **Categorías** compartidas (17 de sistema + las que agreguen los
-  usuarios). Nunca se eliminan, se marcan inactivas.
-- **Partida doble implícita** en transferencias entre bolsas propias y
-  en aportes entre usuarios: dos filas enlazadas por `transfer_id` /
-  `aporte_id`, creadas atómicamente. Anular una anula la otra.
-- **Cierre mensual** configurable: cada usuario elige día y modo
-  (automático / manual). Los movimientos de un mes cerrado quedan
-  inmutables; los ajustes van en el mes nuevo.
-- **Vistas de reportes ya listas**:
-  - `v_saldos_bolsa` — saldo y avance de meta por bolsa.
-  - `v_resumen_mensual_bolsa` — ingresos/gastos por mes por bolsa.
-  - `v_contribuciones_bolsa_general` — quién aportó cuánto y a nombre
-    de quién se gastó en la General.
-  - `v_deudas_entre_usuarios` — balance neto acreedor↔deudor.
-
-## Personalización por usuario
-
-Cada usuario configura desde su perfil:
-
-- Día del cierre mensual (1, último día o personalizado).
-- Modo del cierre (automático o manual con recordatorio N días antes).
-- Umbral de "saldo bajo" en % para alertar.
-- Canales de notificación por evento (correo / Telegram / WhatsApp).
-- Zona horaria (default `America/Mexico_City`).
-- Tema visual (claro / oscuro / sistema).
-
-## Estado actual del proyecto
-
-| PR | Contenido | Estado |
-|----|-----------|--------|
-| **#1** | Setup base: Next.js, auth Magic Link, esquema completo Supabase con RLS, funciones contables, seeds. | Draft, pendiente aplicar `supabase/apply_all.sql` en el dashboard. |
-| **#2** | Dashboard real: lista de bolsas con saldos en vivo, crear/editar/archivar con selector de color e ícono, meta opcional, saldo inicial opcional. Página de detalle de bolsa. | Draft, depende de #1. |
-
-## Roadmap corto (próximos PRs)
-
-1. **#3 · Movimientos** — Registrar ingreso/gasto/transferencia interna/
-   retiro externo. Lista con filtros + drawer lateral master-detail sin
-   abandonar la vista de bolsa. Anular movimiento + solicitar anulación.
-2. **#4 · Aportes entre usuarios** — Diálogo de aportar con naturaleza,
-   libro de contribuciones de la Bolsa General, estado de deudas entre
-   usuarios.
-3. **#5 · Cierre mensual y reportes** — Preferencias por usuario,
-   ejecución del cierre, reportes mensuales exportables.
-4. **#6 · Notificaciones** — Resend (correo) + Bot de Telegram para
-   eventos: aporte recibido, saldo bajo, cierre mensual, solicitud de
-   anulación.
-5. **#7 · Comprobantes, presupuestos, metas, recurrencia** — Adjuntar
-   fotos de tickets, topes mensuales por categoría, movimientos
-   recurrentes.
-6. **#8 · WhatsApp** — Fase final (requiere Twilio o Meta Cloud API).
-
-## Recordatorio de seguridad
-
-Las claves del proyecto Supabase (URL, publishable key, y sobre todo la
-`service_role JWT`) quedaron pegadas en el chat de este agente. La
-`service_role` **omite toda la RLS**. Ir a Supabase Dashboard → Project
-Settings → API → **Rotate** en cuanto sea posible, y actualizar el
-`.env.local` / secrets de Vercel con el nuevo valor.
+1. Modelado de sub-bolsas (compartimento vs anidada independiente).
+2. Eliminar categoría = borrar de verdad vs desactivar.
+3. Alcance de la aprobación en Bolsa General (solo entradas o todo).
+4. Auto-aprobación para movimientos del propio Nesim.
+5. Notificaciones de préstamos por vencer.
+6. Amarrar pago de deuda / reembolso a un préstamo específico.
+7. Destinatarios de la alerta de saldo bajo de la Bolsa General.
+8. Catálogo inicial de categorías.
+9. Quién puede crear sub-bolsas en la Bolsa General.
+10. Guardar reportes como plantillas por usuario.
