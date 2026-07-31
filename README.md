@@ -90,19 +90,24 @@ npm install
 npm run dev
 ```
 
-Abre <http://localhost:3000>. Prueba con "Entrar" y tu correo. Recibirás
-un enlace mágico; al hacer clic entras al dashboard.
+Abre <http://localhost:3000> → **Entrar**.
 
-### 6. Crear la Bolsa General entre los 3
+Cuentas de prueba (contraseña):
 
-Después de que los tres (Nesim, Moisés, Itzyk) hayan entrado al menos
-una vez con Magic Link (para que sus perfiles existan en `public.perfiles`):
+| Usuario | Correo | Contraseña | Rol |
+|---------|--------|------------|-----|
+| Nesim | `nesim@bolsa.com` | `nesim-bolsa-2026` | Admin |
+| Moisés | `moises@bolsa.com` | `moises-bolsa-2026` | Usuario |
+| Itzyk | `itzyk@bolsa.com` | `itzyk-bolsa-2026` | Usuario |
 
-1. Edita `supabase/scripts/bootstrap_bolsa_general.sql` para poner los
-   correos reales de los 3.
-2. Pégalo en **SQL Editor** y ejecuta.
+También puedes usar Magic Link si el correo es real.
 
-Listo. La Bolsa General ya existe y es visible para los tres.
+### 6. Bolsa General
+
+El bootstrap completo (`supabase/scripts/bootstrap_completo.sql` o la
+creación vía Admin API) deja creada la **Bolsa General** con los tres
+como co-propietarios. Si falta, Nesim puede ejecutar `crear_bolsa_general`
+desde SQL.
 
 ---
 
