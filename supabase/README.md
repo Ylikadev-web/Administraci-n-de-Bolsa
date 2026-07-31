@@ -1,56 +1,41 @@
-# Base de datos — instrucciones rápidas
+# Base de datos — instrucciones rápidas (esquema v5)
 
-## Aplicar todo el esquema de un jalón
+## Aplicar el esquema completo
 
-1. Entra a tu proyecto Supabase → **SQL Editor** → **New query**.
-2. Abre el archivo [`apply_all.sql`](./apply_all.sql) en tu editor local
-   (VS Code, Cursor, etc.) y **copia todo su contenido**.
-3. Pégalo en el SQL Editor y presiona **Run** (botón verde arriba a la
-   derecha, atajo `Cmd/Ctrl + Enter`).
-4. Deberías ver "Success. No rows returned" — significa que se
-   crearon todas las tablas, funciones, vistas, políticas y semillas.
+1. Abre tu proyecto Supabase → **SQL Editor** → **New query**.
+2. Copia el contenido de [`apply_all.sql`](./apply_all.sql) y pégalo.
+3. Presiona **Run** (`Cmd/Ctrl + Enter`).
+4. Debería ver "Success. No rows returned".
 
-Si prefieres aplicarlo por archivos individuales para ver el progreso,
-usa los 4 archivos en [`migrations/`](./migrations/) en orden numérico.
+Si prefieres aplicar por archivos, ejecuta en orden los 4 archivos de
+[`migrations/`](./migrations/).
 
-## Crear la Bolsa General entre los 3 usuarios
+## Bootstrap (una sola vez)
 
-Una vez que **Nesim, Moisés e Itzyk** hayan entrado al menos una vez a
-la webapp con Magic Link (para que sus perfiles existan en
-`public.perfiles`):
+Cuando los tres usuarios (Nesim, Moisés, Itzyk) hayan iniciado sesión
+al menos una vez con Magic Link:
 
-1. Abre [`scripts/bootstrap_bolsa_general.sql`](./scripts/bootstrap_bolsa_general.sql).
-2. Reemplaza los correos de ejemplo por los reales.
-3. Pégalo en SQL Editor y ejecuta.
+1. Abre [`scripts/bootstrap.sql`](./scripts/bootstrap.sql).
+2. Cambia los correos de ejemplo por los reales.
+3. Pega en SQL Editor y ejecuta.
 
-## Verificar que todo quedó bien
+Esto marca a Nesim como administrador y crea la Bolsa General con los
+tres como co-propietarios.
 
-En el SQL Editor, corre esta consulta:
+## Verificar
 
 ```sql
 select
-  (select count(*) from public.categorias where es_sistema) as categorias_sistema,
   (select count(*) from public.perfiles)                    as perfiles,
-  (select count(*) from public.bolsas)                      as bolsas,
+  (select count(*) from public.perfiles where es_admin)      as admins,
+  (select count(*) from public.bolsas where es_general)      as bolsa_general,
   (select count(*) from information_schema.tables
-     where table_schema = 'public')                         as tablas_publicas;
+     where table_schema = 'public')                          as tablas_publicas;
 ```
 
-Esperado tras aplicar `apply_all.sql`:
+Esperado tras el bootstrap:
 
-- `categorias_sistema` = **17**
-- `tablas_publicas` = **14** (o similar)
-- `perfiles` = 0 hasta que alguien entre
-- `bolsas` = 0 hasta que se cree la Bolsa General
-
-## Regenerar tipos TypeScript (opcional, para desarrollo)
-
-Requiere Supabase CLI y un Personal Access Token
-(<https://supabase.com/dashboard/account/tokens>).
-
-```bash
-export SUPABASE_ACCESS_TOKEN=sbp_...
-npx supabase gen types typescript \
-  --project-id chzzzvyljkqsofpjyqgr \
-  > lib/supabase/types.ts
-```
+- `perfiles` = 3
+- `admins` = 1 (Nesim)
+- `bolsa_general` = 1
+- `tablas_publicas` = ~15
