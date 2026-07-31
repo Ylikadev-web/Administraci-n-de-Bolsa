@@ -1,45 +1,72 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Loader2, Mail } from "lucide-react";
+import { Loader2, Mail, KeyRound } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 
-const schema = z.object({
-  email: z
-    .string()
-    .min(1, "Escribe tu correo")
-    .email("Correo inválido"),
+type Method = "password" | "magic";
+
+const passwordSchema = z.object({
+  email: z.string().min(1, "Escribe tu correo").email("Correo inválido"),
+  password: z.string().min(1, "Escribe tu contraseña"),
 });
 
-type FormValues = z.infer<typeof schema>;
+const magicSchema = z.object({
+  email: z.string().min(1, "Escribe tu correo").email("Correo inválido"),
+  password: z.string().optional(),
+});
+
+type FormValues = z.infer<typeof passwordSchema>;
 
 export function LoginForm() {
+  const router = useRouter();
+  const [method, setMethod] = React.useState<Method>("password");
   const [sent, setSent] = React.useState<string | null>(null);
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: { email: "" },
+    resolver: zodResolver(method === "password" ? passwordSchema : magicSchema),
+    defaultValues: { email: "", password: "" },
   });
+
+  React.useEffect(() => {
+    form.clearErrors();
+  }, [method, form]);
 
   const onSubmit = async (values: FormValues) => {
     const supabase = createClient();
+
+    if (method === "password") {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password ?? "",
+      });
+      if (error) {
+        toast.error("No pudimos iniciar sesión", { description: error.message });
+        return;
+      }
+      toast.success("Bienvenido");
+      router.push("/dashboard");
+      router.refresh();
+      return;
+    }
+
     const siteUrl =
       process.env.NEXT_PUBLIC_SITE_URL ??
       (typeof window !== "undefined" ? window.location.origin : "");
 
     const { error } = await supabase.auth.signInWithOtp({
       email: values.email,
-      options: {
-        emailRedirectTo: `${siteUrl}/auth/callback`,
-      },
+      options: { emailRedirectTo: `${siteUrl}/auth/callback` },
     });
 
     if (error) {
@@ -48,9 +75,7 @@ export function LoginForm() {
     }
 
     setSent(values.email);
-    toast.success("Revisa tu correo", {
-      description: "Te enviamos un enlace para entrar.",
-    });
+    toast.success("Revisa tu correo");
   };
 
   if (sent) {
@@ -63,7 +88,7 @@ export function LoginForm() {
         <p className="mt-1 text-sm text-muted-foreground">
           Enviamos un enlace mágico a{" "}
           <span className="font-medium text-foreground">{sent}</span>. Haz clic
-          en él para entrar. El enlace expira pronto.
+          en él para entrar.
         </p>
         <Button
           variant="ghost"
@@ -78,48 +103,103 @@ export function LoginForm() {
   }
 
   return (
-    <form
-      onSubmit={form.handleSubmit(onSubmit)}
-      className="space-y-4 rounded-lg border bg-card p-6"
-    >
-      <div className="space-y-2">
-        <Label htmlFor="email">Correo</Label>
-        <Input
-          id="email"
-          type="email"
-          autoComplete="email"
-          placeholder="tu@correo.com"
-          {...form.register("email")}
-        />
-        {form.formState.errors.email && (
-          <p className="text-xs text-destructive">
-            {form.formState.errors.email.message}
-          </p>
-        )}
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-1 rounded-lg border bg-muted/40 p-1 text-sm">
+        <button
+          type="button"
+          onClick={() => setMethod("password")}
+          className={cn(
+            "flex items-center justify-center gap-2 rounded-md py-1.5 font-medium transition-colors",
+            method === "password"
+              ? "bg-background shadow-sm"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <KeyRound className="h-3.5 w-3.5" />
+          Contraseña
+        </button>
+        <button
+          type="button"
+          onClick={() => setMethod("magic")}
+          className={cn(
+            "flex items-center justify-center gap-2 rounded-md py-1.5 font-medium transition-colors",
+            method === "magic"
+              ? "bg-background shadow-sm"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <Mail className="h-3.5 w-3.5" />
+          Enlace mágico
+        </button>
       </div>
 
-      <Button
-        type="submit"
-        className="w-full"
-        disabled={form.formState.isSubmitting}
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="space-y-4 rounded-lg border bg-card p-6"
       >
-        {form.formState.isSubmitting ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Enviando...
-          </>
-        ) : (
-          <>
-            <Mail className="mr-2 h-4 w-4" />
-            Enviar enlace mágico
-          </>
-        )}
-      </Button>
+        <div className="space-y-2">
+          <Label htmlFor="email">Correo</Label>
+          <Input
+            id="email"
+            type="email"
+            autoComplete="email"
+            placeholder="tu@correo.com"
+            {...form.register("email")}
+          />
+          {form.formState.errors.email && (
+            <p className="text-xs text-destructive">
+              {form.formState.errors.email.message}
+            </p>
+          )}
+        </div>
 
-      <p className="text-center text-xs text-muted-foreground">
-        Al continuar aceptas que el sistema registrará tus acciones para
-        auditoría contable.
-      </p>
-    </form>
+        {method === "password" && (
+          <div className="space-y-2">
+            <Label htmlFor="password">Contraseña</Label>
+            <Input
+              id="password"
+              type="password"
+              autoComplete="current-password"
+              placeholder="••••••••"
+              {...form.register("password")}
+            />
+            {form.formState.errors.password && (
+              <p className="text-xs text-destructive">
+                {form.formState.errors.password.message}
+              </p>
+            )}
+          </div>
+        )}
+
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={form.formState.isSubmitting}
+        >
+          {form.formState.isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {method === "password" ? "Entrando..." : "Enviando..."}
+            </>
+          ) : method === "password" ? (
+            <>
+              <KeyRound className="mr-2 h-4 w-4" />
+              Entrar
+            </>
+          ) : (
+            <>
+              <Mail className="mr-2 h-4 w-4" />
+              Enviar enlace mágico
+            </>
+          )}
+        </Button>
+
+        <p className="text-center text-xs text-muted-foreground">
+          {method === "password"
+            ? "Si usas correos ficticios internos, este es el método correcto."
+            : "Usa esta opción si tu correo es real y quieres recibir un enlace."}
+        </p>
+      </form>
+    </div>
   );
 }

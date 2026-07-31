@@ -23,7 +23,7 @@ export default function LoginPage() {
               Bienvenido de vuelta
             </h1>
             <p className="text-sm text-muted-foreground">
-              Te enviaremos un enlace mágico a tu correo para entrar.
+              Entra con tu correo y contraseña, o pide un enlace mágico.
             </p>
           </div>
           <LoginForm />
