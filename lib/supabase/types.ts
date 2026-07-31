@@ -1,10 +1,9 @@
 /**
- * Tipos manuales del esquema `public`.
+ * Tipos del esquema `public` (v5).
  *
- * Regenerar cuando se agreguen migraciones:
+ * Cuando el proyecto Supabase esté aplicado, se pueden regenerar con:
  *   npx supabase gen types typescript --project-id chzzzvyljkqsofpjyqgr > lib/supabase/types.ts
- *
- * (requiere SUPABASE_ACCESS_TOKEN — Personal Access Token de la cuenta)
+ * (requiere SUPABASE_ACCESS_TOKEN — PAT).
  */
 export type Json =
   | string
@@ -14,39 +13,39 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-// -----------------------------------------------------------------
-// Enums públicos (usables directamente en la app).
-// -----------------------------------------------------------------
+// -------- Enums --------
 export type TipoMovimiento =
   | "saldo_apertura"
   | "ingreso"
   | "gasto"
   | "transferencia_interna"
-  | "aporte_recibido"
   | "aporte_enviado"
-  | "retiro_externo";
+  | "aporte_recibido";
 
 export type NaturalezaAporte =
   | "prestamo"
   | "pago_deuda"
   | "reembolso"
-  | "cooperacion"
-  | "adelanto";
+  | "cooperacion";
 
-export type EstadoMovimiento = "activo" | "anulado";
+export type EstadoMovimiento =
+  | "pendiente_aprobacion"
+  | "activo"
+  | "rechazado"
+  | "anulado";
+
 export type CanalNotificacion = "email" | "telegram" | "whatsapp";
 export type ModoCierre = "automatico" | "manual";
-export type RolBolsa = "dueno" | "co_dueno";
 export type EstadoSolicitudAnulacion = "pendiente" | "aprobada" | "rechazada";
 
-// -----------------------------------------------------------------
-// Row types "de vista" (usados en componentes/consultas).
-// -----------------------------------------------------------------
+// -------- Row types --------
 export interface Perfil {
   id: string;
   nombre: string;
   email: string;
   avatar_url: string | null;
+  es_admin: boolean;
+  activo: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -59,6 +58,8 @@ export interface Bolsa {
   icono: string | null;
   moneda: string;
   es_general: boolean;
+  parent_id: string | null;
+  assigned_by_admin: string | null;
   archivada: boolean;
   archivada_at: string | null;
   permite_saldo_negativo: boolean;
@@ -78,16 +79,23 @@ export interface Movimiento {
   moneda: string;
   categoria_id: string | null;
   descripcion: string | null;
-  fecha_movimiento: string;
+  fecha_solicitud: string;
+  fecha_ejecucion: string | null;
   estado: EstadoMovimiento;
   autor_id: string;
   created_at: string;
   updated_at: string;
+  aprobado_por: string | null;
+  aprobado_at: string | null;
+  motivo_rechazo: string | null;
   anulado_at: string | null;
   anulado_por: string | null;
   motivo_anulacion: string | null;
   transfer_id: string | null;
   aporte_id: string | null;
+  prestamo_id: string | null;
+  plazo_dias: number | null;
+  fecha_vencimiento: string | null;
   naturaleza_aporte: NaturalezaAporte | null;
   contraparte_bolsa_id: string | null;
   contraparte_usuario_id: string | null;
@@ -95,11 +103,7 @@ export interface Movimiento {
   cerrado: boolean;
 }
 
-// -----------------------------------------------------------------
-// Shape de Database para supabase-js. Usa `Json` amplio para no pelear
-// con el sistema de tipos del SDK; el tipado fuerte lo obtenemos en
-// consulta con `.returns<Bolsa[]>()` / `.select<...>()`.
-// -----------------------------------------------------------------
+// Loose Database type para satisfacer supabase-js
 type LooseTable = {
   Row: Record<string, unknown>;
   Insert: Record<string, unknown>;
@@ -112,6 +116,7 @@ export interface Database {
     Tables: {
       perfiles: LooseTable;
       preferencias_usuario: LooseTable;
+      config_global: LooseTable;
       canales_notificacion: LooseTable;
       suscripciones_evento: LooseTable;
       bolsas: LooseTable;
@@ -120,34 +125,90 @@ export interface Database {
       movimientos: LooseTable;
       movimiento_adjuntos: LooseTable;
       movimientos_recurrentes: LooseTable;
-      presupuestos: LooseTable;
       solicitudes_anulacion: LooseTable;
       cierres_mensuales: LooseTable;
+      plantillas_reporte: LooseTable;
       auditoria: LooseTable;
     };
     Views: {
-      v_saldos_bolsa: {
-        Row: Record<string, unknown>;
-        Relationships: [];
-      };
-      v_resumen_mensual_bolsa: {
-        Row: Record<string, unknown>;
-        Relationships: [];
-      };
-      v_contribuciones_bolsa_general: {
-        Row: Record<string, unknown>;
-        Relationships: [];
-      };
-      v_deudas_entre_usuarios: {
-        Row: Record<string, unknown>;
-        Relationships: [];
-      };
+      v_saldos_bolsa: { Row: Record<string, unknown>; Relationships: [] };
+      v_resumen_mensual_bolsa: { Row: Record<string, unknown>; Relationships: [] };
+      v_contribuciones_bolsa_general: { Row: Record<string, unknown>; Relationships: [] };
+      v_prestamos_activos: { Row: Record<string, unknown>; Relationships: [] };
+      v_deudas_entre_usuarios: { Row: Record<string, unknown>; Relationships: [] };
     };
     Functions: {
-      saldo_bolsa: {
-        Args: { p_bolsa_id: string };
-        Returns: string | null;
+      saldo_bolsa: { Args: { p_bolsa_id: string }; Returns: string | null };
+      saldo_total_bolsa: { Args: { p_bolsa_id: string }; Returns: string | null };
+      es_admin: { Args: Record<string, never>; Returns: boolean };
+      es_miembro_bolsa: { Args: { p_bolsa_id: string }; Returns: boolean };
+      es_bolsa_asignada: { Args: { p_bolsa_id: string }; Returns: boolean };
+      crear_bolsa_propia: {
+        Args: {
+          p_nombre: string;
+          p_descripcion: string | null;
+          p_color: string;
+          p_icono: string | null;
+          p_moneda: string;
+          p_saldo_inicial: number;
+          p_permite_saldo_negativo: boolean;
+          p_meta_habilitada: boolean;
+          p_meta_monto: number | null;
+          p_meta_fecha: string | null;
+          p_parent_id: string | null;
+        };
+        Returns: string;
       };
+      asignar_bolsa_a_usuario: {
+        Args: {
+          p_nombre: string;
+          p_descripcion: string | null;
+          p_color: string;
+          p_icono: string | null;
+          p_moneda: string;
+          p_usuario_asignado: string;
+          p_saldo_inicial: number;
+          p_permite_saldo_negativo: boolean;
+        };
+        Returns: string;
+      };
+      crear_bolsa_general: {
+        Args: {
+          p_nombre?: string;
+          p_color?: string;
+          p_icono?: string;
+          p_moneda?: string;
+          p_co_owners?: string[];
+        };
+        Returns: string;
+      };
+      registrar_movimiento: {
+        Args: {
+          p_bolsa_id: string;
+          p_tipo: TipoMovimiento;
+          p_monto: number;
+          p_categoria_id: string | null;
+          p_descripcion: string | null;
+          p_fecha_ejecucion?: string;
+        };
+        Returns: string;
+      };
+      aprobar_movimiento: { Args: { p_movimiento_id: string }; Returns: undefined };
+      rechazar_movimiento: { Args: { p_movimiento_id: string; p_motivo: string }; Returns: undefined };
+      crear_aporte: {
+        Args: {
+          p_bolsa_origen: string;
+          p_bolsa_destino: string;
+          p_monto: number;
+          p_naturaleza: NaturalezaAporte;
+          p_descripcion: string;
+          p_plazo_dias?: number;
+          p_prestamo_id?: string;
+          p_fecha_ejecucion?: string;
+        };
+        Returns: string;
+      };
+      cancelar_aporte_pendiente: { Args: { p_aporte_id: string }; Returns: undefined };
       crear_transferencia_interna: {
         Args: {
           p_bolsa_origen: string;
@@ -158,25 +219,9 @@ export interface Database {
         };
         Returns: string;
       };
-      crear_aporte: {
-        Args: {
-          p_bolsa_origen: string;
-          p_bolsa_destino: string;
-          p_monto: number;
-          p_naturaleza: NaturalezaAporte;
-          p_descripcion: string;
-          p_fecha?: string;
-        };
-        Returns: string;
-      };
-      anular_movimiento: {
-        Args: { p_movimiento_id: string; p_motivo: string };
-        Returns: undefined;
-      };
-      archivar_bolsa: {
-        Args: { p_bolsa_id: string };
-        Returns: undefined;
-      };
+      anular_movimiento: { Args: { p_movimiento_id: string; p_motivo: string }; Returns: undefined };
+      archivar_bolsa: { Args: { p_bolsa_id: string }; Returns: undefined };
+      actualizar_umbral_saldo_bajo: { Args: { p_pct: number }; Returns: undefined };
     };
     Enums: {
       tipo_movimiento: TipoMovimiento;
@@ -184,7 +229,6 @@ export interface Database {
       estado_movimiento: EstadoMovimiento;
       canal_notificacion: CanalNotificacion;
       modo_cierre: ModoCierre;
-      rol_bolsa: RolBolsa;
       estado_solicitud_anulacion: EstadoSolicitudAnulacion;
     };
     CompositeTypes: Record<string, never>;
