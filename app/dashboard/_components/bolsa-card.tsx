@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Lock, Users, MoreHorizontal, Archive, Pencil } from "lucide-react";
+import { Lock, Users, Key, MoreHorizontal, Pencil } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ export async function BolsaCard({
   icono,
   moneda,
   esGeneral,
+  esAsignada,
   esMio,
   metaHabilitada,
   metaMonto,
@@ -33,6 +34,7 @@ export async function BolsaCard({
   icono: string | null;
   moneda: string;
   esGeneral: boolean;
+  esAsignada: boolean;
   esMio: boolean;
   metaHabilitada: boolean;
   metaMonto: number | null;
@@ -48,13 +50,14 @@ export async function BolsaCard({
       ? Math.min(100, Math.max(0, (saldoNum / metaMonto) * 100))
       : null;
 
-  const puedeAdmin = esMio && !esGeneral;
+  const puedeAdmin = esMio && !esGeneral && !esAsignada;
 
   return (
     <Card
       className={cn(
         "group relative overflow-hidden transition-colors hover:border-primary/40",
         esGeneral && "border-warning/40 bg-warning/5",
+        esAsignada && "border-primary/30",
       )}
     >
       <div
@@ -78,10 +81,15 @@ export async function BolsaCard({
                   <Users className="h-3 w-3" />
                   General
                 </span>
+              ) : esAsignada ? (
+                <span className="inline-flex items-center gap-1 rounded-md bg-primary/15 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                  <Key className="h-3 w-3" />
+                  Asignada
+                </span>
               ) : (
                 <span className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
                   <Lock className="h-3 w-3" />
-                  Privada
+                  Propia
                 </span>
               )}
             </div>

@@ -12,6 +12,7 @@ interface BolsaListItem {
   icono: string | null;
   moneda: string;
   es_general: boolean;
+  assigned_by_admin: string | null;
   meta_habilitada: boolean;
   meta_monto: string | null;
   created_by: string;
@@ -26,9 +27,10 @@ export default async function DashboardPage() {
   const { data: bolsas, error } = await supabase
     .from("bolsas")
     .select(
-      "id, nombre, descripcion, color, icono, moneda, es_general, meta_habilitada, meta_monto, created_by",
+      "id, nombre, descripcion, color, icono, moneda, es_general, assigned_by_admin, meta_habilitada, meta_monto, created_by",
     )
     .eq("archivada", false)
+    .is("parent_id", null)
     .order("es_general", { ascending: false })
     .order("created_at", { ascending: true })
     .returns<BolsaListItem[]>();
@@ -74,6 +76,7 @@ export default async function DashboardPage() {
               icono={b.icono}
               moneda={b.moneda}
               esGeneral={b.es_general}
+              esAsignada={b.assigned_by_admin !== null}
               esMio={b.created_by === user?.id}
               metaHabilitada={b.meta_habilitada}
               metaMonto={b.meta_monto ? Number(b.meta_monto) : null}

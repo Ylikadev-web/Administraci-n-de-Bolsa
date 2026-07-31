@@ -40,61 +40,26 @@ export async function crearBolsa(
     meta_fecha,
   } = parsed.data;
 
-  // Crear la bolsa personal.
-  const { data: bolsa, error: bolsaError } = await supabase
-    .from("bolsas")
-    .insert({
-      nombre,
-      descripcion: descripcion || null,
-      color,
-      icono: icono || null,
-      moneda,
-      es_general: false,
-      permite_saldo_negativo,
-      meta_habilitada,
-      meta_monto: meta_habilitada && meta_monto ? String(meta_monto) : null,
-      meta_fecha: meta_habilitada ? meta_fecha || null : null,
-      created_by: user.id,
-    } as never)
-    .select("id")
-    .returns<{ id: string }[]>()
-    .single();
+  const { data, error } = await supabase.rpc("crear_bolsa_propia", {
+    p_nombre: nombre,
+    p_descripcion: descripcion || null,
+    p_color: color,
+    p_icono: icono || null,
+    p_moneda: moneda,
+    p_saldo_inicial: Number(saldo_inicial ?? 0),
+    p_permite_saldo_negativo: permite_saldo_negativo,
+    p_meta_habilitada: meta_habilitada,
+    p_meta_monto: meta_habilitada && meta_monto ? Number(meta_monto) : null,
+    p_meta_fecha: meta_habilitada ? meta_fecha || null : null,
+    p_parent_id: null,
+  });
 
-  if (bolsaError || !bolsa) {
-    return { ok: false, error: bolsaError?.message ?? "No se pudo crear la bolsa" };
-  }
-
-  // Asignar como dueño.
-  const { error: miembroError } = await supabase
-    .from("bolsa_miembros")
-    .insert({
-      bolsa_id: bolsa.id,
-      usuario_id: user.id,
-      rol: "dueno",
-      added_by: user.id,
-    } as never);
-
-  if (miembroError) {
-    return { ok: false, error: miembroError.message };
-  }
-
-  // Saldo de apertura opcional.
-  if (saldo_inicial > 0) {
-    const { error: aperturaError } = await supabase.from("movimientos").insert({
-      bolsa_id: bolsa.id,
-      tipo: "saldo_apertura",
-      monto: String(saldo_inicial),
-      moneda,
-      descripcion: "Saldo inicial de la bolsa",
-      autor_id: user.id,
-    } as never);
-    if (aperturaError) {
-      return { ok: false, error: aperturaError.message };
-    }
+  if (error || !data) {
+    return { ok: false, error: error?.message ?? "No se pudo crear la bolsa" };
   }
 
   revalidatePath("/dashboard");
-  return { ok: true, data: { id: bolsa.id } };
+  return { ok: true, data: { id: data as unknown as string } };
 }
 
 export async function editarBolsa(

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Lock, Users, Plus, MoreVertical, Pencil } from "lucide-react";
+import { ArrowLeft, Lock, Users, Key, Plus, MoreVertical, Pencil } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { BolsaIcon } from "@/app/dashboard/_components/bolsa-icon";
@@ -63,10 +63,15 @@ export default async function BolsaDetailPage({
                   <Users className="h-3 w-3" />
                   Bolsa General
                 </span>
+              ) : bolsa.assigned_by_admin ? (
+                <span className="inline-flex items-center gap-1 rounded-md bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
+                  <Key className="h-3 w-3" />
+                  Asignada por administrador
+                </span>
               ) : (
                 <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
                   <Lock className="h-3 w-3" />
-                  Privada
+                  Propia
                 </span>
               )}
             </div>
@@ -86,7 +91,7 @@ export default async function BolsaDetailPage({
             <Plus className="mr-2 h-4 w-4" />
             Registrar movimiento
           </Button>
-          {esMio && !bolsa.es_general && (
+          {esMio && !bolsa.es_general && !bolsa.assigned_by_admin && (
             <EditarBolsaTrigger
               autoOpen={searchParams?.edit === "1"}
               bolsa={{
@@ -125,8 +130,10 @@ export default async function BolsaDetailPage({
             <li className="flex items-start gap-2">
               <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-foreground/40" />
               {bolsa.es_general
-                ? "Los 3 co-dueños pueden registrar movimientos."
-                : "Solo tú puedes registrar movimientos."}
+                ? "Todos los movimientos pasan por la aprobación del administrador."
+                : bolsa.assigned_by_admin
+                ? "Solo puedes solicitar ingresos y gastos; el administrador aprueba."
+                : "Tú registras movimientos libremente en tu bolsa propia."}
             </li>
             <li className="flex items-start gap-2">
               <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-foreground/40" />

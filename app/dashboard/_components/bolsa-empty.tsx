@@ -9,8 +9,10 @@ export function BolsaEmpty() {
       </div>
       <h3 className="text-lg font-semibold">Aún no tienes bolsas</h3>
       <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-        Crea tu primera bolsa personal. Puedes empezar en 0 o con un monto
-        inicial, y solo tú verás su saldo y movimientos.
+        Crea tu primera bolsa propia. Puedes empezar en 0 o con un monto
+        inicial, y solo tú verás su saldo y movimientos. Si el
+        administrador te asigna una bolsa o te agrega a la Bolsa General,
+        también aparecerá aquí.
       </p>
       <div className="mt-4">
         <NuevaBolsaButton>Crear mi primera bolsa</NuevaBolsaButton>
