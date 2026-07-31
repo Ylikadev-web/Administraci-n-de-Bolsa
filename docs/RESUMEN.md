@@ -1,4 +1,4 @@
-# Resumen del proyecto — Bolsas (v3, lógica cerrada)
+# Resumen del proyecto — Bolsas (v4)
 
 > La versión completa está en [`Bolsas-Resumen.pdf`](./Bolsas-Resumen.pdf).
 
@@ -7,42 +7,57 @@
 ## Modelo
 
 **Bolsas** es una app web para administrar finanzas compartidas entre
-miembros de un grupo. Cada persona maneja sus propias bolsas privadas y
-todos comparten una **Bolsa General cuyos movimientos requieren
-aprobación de Nesim** (administrador).
+miembros de un grupo. Cada persona maneja sus propias bolsas privadas
+y todos comparten una Bolsa General.
 
-## Decisiones finales de la lógica
+## Cambios de v4 respecto a v3
 
-- **Sub-bolsas = compartimentos del padre.** El saldo del padre incluye
-  el de sus sub-bolsas; asignar dinero a una sub-bolsa no cambia el
-  total de la bolsa madre.
-- **Categorías: crear, editar y eliminar de verdad.** Los movimientos
-  que apuntaban a una categoría eliminada quedan como *Sin categoría*.
-- **Aprobación en Bolsa General: todos los movimientos** (entradas,
-  salidas, aportes, transferencias). Nesim se auto-aprueba con marca en
-  auditoría.
-- **Préstamos con recordatorios**: 7 días antes, 3 días antes, el día
-  del vencimiento, y cada semana después de vencido hasta que se salde.
-- **Pago de deuda y reembolso se amarran a un préstamo específico** que
-  se cierra automáticamente cuando el saldo llega a cero.
-- **Pestaña de Préstamos** por usuario: "Me deben", "Yo debo" y
-  "Cerrados", con estados *Al corriente / Próximo a vencer / Vencido /
-  Cerrado*.
-- **Alerta de saldo bajo en Bolsa General**: umbral configurable solo
-  por Nesim; la alerta llega a los tres co-dueños.
-- **Sub-bolsas de la Bolsa General**: solo Nesim las crea y edita.
-- **Plantillas de reportes** privadas por usuario.
-- **Catálogo empresarial de categorías** (19 gastos + 7 ingresos)
-  como punto de partida.
+- **Sin catálogo de categorías por defecto.** Cada usuario crea las
+  suyas si quiere, o describe el movimiento con **texto libre** y
+  aparece como *Sin categoría* en los reportes.
+- **Doble control por aprobación:**
+  - En la **Bolsa General**, todo movimiento pasa por Nesim.
+  - En las **bolsas privadas**, los aportes recibidos desde otros
+    usuarios pasan por el dueño de la bolsa receptora.
+- **Alta de usuarios**: al agregar un usuario nuevo, Nesim decide en
+  el momento si es co-propietario de la Bolsa General.
 
-## Estas siguen sin definirse (5 preguntas finas en el PDF)
+## Reglas nucleares
 
-1. Rubro específico del catálogo empresarial.
-2. Nesim admin: ¿puede desactivar y/o transferir el rol de admin?
-3. Bolsas privadas de Nesim: ¿mantienen su privacidad como las demás?
-4. Al agregar un usuario nuevo: ¿co-dueño de la Bolsa General por
-   defecto, o Nesim marca uno a uno?
-5. Anular un movimiento ya aprobado en la Bolsa General: ¿requiere
-   nueva aprobación?
+- **Privacidad primero**: cada dueño solo ve su bolsa y sub-bolsas.
+- **Nadie mete dinero sin permiso**: Bolsa General → Nesim; bolsa
+  privada → dueño.
+- **Aportar sí, retirar no**.
+- **Nada se elimina** (movimientos se anulan, bolsas se archivan con
+  saldo 0). Categorías sí se eliminan; los movimientos que las usaban
+  quedan como *Sin categoría*.
+- **Saldos calculados** desde los movimientos activos.
+- **Sub-bolsas = compartimentos del padre** (el saldo padre incluye
+  las sub-bolsas).
+
+## Otros elementos
+
+- **Aportes son préstamos por defecto** con plazo 7 / 15 / 30 / 60
+  días o personalizado.
+- **Pago de deuda y reembolso** se amarran a un préstamo específico.
+- **Recordatorios de préstamo**: 7 días, 3 días antes, día del
+  vencimiento y semanal después hasta que se cierre.
+- **Pestaña Préstamos** por usuario con "Me deben", "Yo debo" y
+  "Cerrados".
+- **Alerta de saldo bajo** solo en la Bolsa General; umbral solo
+  Nesim, aviso a los tres.
+- **Reportes configurables** con **plantillas privadas** por usuario.
+
+## Preguntas por resolver (6 en el PDF)
+
+1. Aporte pendiente: ¿saldo del remitente se descuenta al instante o
+   queda reservado?
+2. Aporte pendiente: ¿el remitente puede cancelarlo antes de que el
+   receptor decida?
+3. Rechazo de aporte: ¿motivo escrito obligatorio?
+4. Nesim admin: ¿puede desactivar usuarios y transferir el rol?
+5. Bolsas privadas de Nesim: ¿mantienen privacidad como las demás?
+6. Anular un movimiento ya aprobado en la Bolsa General: ¿requiere
+   nueva aprobación de Nesim?
 
 Todas con recomendación en el PDF.
