@@ -92,15 +92,9 @@ npm run dev
 
 Abre <http://localhost:3000> → **Entrar**.
 
-Cuentas de prueba (contraseña):
-
-| Usuario | Correo | Contraseña | Rol |
-|---------|--------|------------|-----|
-| Nesim | `nesim@bolsa.com` | `nesim-bolsa-2026` | Admin |
-| Moisés | `moises@bolsa.com` | `moises-bolsa-2026` | Usuario |
-| Itzyk | `itzyk@bolsa.com` | `itzyk-bolsa-2026` | Usuario |
-
-También puedes usar Magic Link si el correo es real.
+Usa el login con contraseña o Magic Link. Las credenciales de los tres
+usuarios se crean con `supabase/scripts/bootstrap_completo.sql` (no las
+publiques en la UI ni en chats).
 
 ### 6. Bolsa General
 

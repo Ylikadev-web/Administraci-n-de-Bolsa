@@ -29,7 +29,6 @@ const magicSchema = z.object({
 type FormValues = z.infer<typeof passwordSchema>;
 
 export function LoginForm() {
-  const router = useRouter();
   const [method, setMethod] = React.useState<Method>("password");
   const [sent, setSent] = React.useState<string | null>(null);
 
@@ -55,8 +54,8 @@ export function LoginForm() {
         return;
       }
       toast.success("Bienvenido");
-      router.push("/dashboard");
-      router.refresh();
+      // Hard navigation so middleware picks up the session cookie reliably.
+      window.location.assign("/dashboard");
       return;
     }
 
@@ -196,20 +195,9 @@ export function LoginForm() {
 
         <p className="text-center text-xs text-muted-foreground">
           {method === "password"
-            ? "Si usas correos ficticios internos, este es el método correcto."
+            ? "Inicia sesión con el correo y la contraseña de tu cuenta."
             : "Usa esta opción si tu correo es real y quieres recibir un enlace."}
         </p>
-
-        {method === "password" && (
-          <div className="rounded-md border border-dashed bg-muted/30 p-3 text-left text-xs text-muted-foreground">
-            <p className="font-medium text-foreground">Cuentas de prueba</p>
-            <ul className="mt-1 space-y-0.5 font-mono">
-              <li>nesim@bolsa.com / nesim-bolsa-2026</li>
-              <li>moises@bolsa.com / moises-bolsa-2026</li>
-              <li>itzyk@bolsa.com / itzyk-bolsa-2026</li>
-            </ul>
-          </div>
-        )}
       </form>
     </div>
   );
