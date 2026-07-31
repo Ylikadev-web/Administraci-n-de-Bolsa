@@ -4,6 +4,8 @@ import { BolsaCard } from "@/app/dashboard/_components/bolsa-card";
 import { BolsaEmpty } from "@/app/dashboard/_components/bolsa-empty";
 import { NuevaBolsaButton } from "@/app/dashboard/_components/nueva-bolsa-button";
 import { PendientesAprobacion } from "@/app/dashboard/_components/pendientes-aprobacion";
+import { CrearBolsaGeneralButton } from "@/app/dashboard/_components/crear-bolsa-general-button";
+import { AsignarBolsaButton } from "@/app/dashboard/_components/asignar-bolsa-button";
 
 interface BolsaListItem {
   id: string;
@@ -25,18 +27,36 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: bolsas, error } = await supabase
-    .from("bolsas")
-    .select(
-      "id, nombre, descripcion, color, icono, moneda, es_general, assigned_by_admin, meta_habilitada, meta_monto, created_by",
-    )
-    .eq("archivada", false)
-    .is("parent_id", null)
-    .order("es_general", { ascending: false })
-    .order("created_at", { ascending: true })
-    .returns<BolsaListItem[]>();
+  const [{ data: bolsas, error }, { data: perfil }, { data: otrosUsuarios }] =
+    await Promise.all([
+      supabase
+        .from("bolsas")
+        .select(
+          "id, nombre, descripcion, color, icono, moneda, es_general, assigned_by_admin, meta_habilitada, meta_monto, created_by",
+        )
+        .eq("archivada", false)
+        .is("parent_id", null)
+        .order("es_general", { ascending: false })
+        .order("created_at", { ascending: true })
+        .returns<BolsaListItem[]>(),
+      supabase
+        .from("perfiles")
+        .select("es_admin")
+        .eq("id", user?.id ?? "")
+        .maybeSingle<{ es_admin: boolean }>(),
+      supabase
+        .from("perfiles")
+        .select("id, nombre, email")
+        .eq("activo", true)
+        .neq("id", user?.id ?? "")
+        .order("nombre")
+        .returns<{ id: string; nombre: string; email: string }[]>(),
+    ]);
 
   const items = bolsas ?? [];
+  const esAdmin = Boolean(perfil?.es_admin);
+  const tieneGeneral = items.some((b) => b.es_general);
+  const usuarios = otrosUsuarios ?? [];
 
   return (
     <div className="space-y-6">
@@ -44,13 +64,20 @@ export default async function DashboardPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Mis bolsas</h1>
           <p className="text-sm text-muted-foreground">
-            Solo ves tus bolsas personales y la Bolsa General.
+            Solo ves tus bolsas personales y la Bolsa General (si eres
+            co-propietario).
           </p>
         </div>
-        <NuevaBolsaButton>
-          <Plus className="mr-2 h-4 w-4" />
-          Nueva bolsa
-        </NuevaBolsaButton>
+        <div className="flex flex-wrap gap-2">
+          {esAdmin && !tieneGeneral && (
+            <CrearBolsaGeneralButton usuarios={usuarios} />
+          )}
+          {esAdmin && <AsignarBolsaButton usuarios={usuarios} />}
+          <NuevaBolsaButton>
+            <Plus className="mr-2 h-4 w-4" />
+            Nueva bolsa
+          </NuevaBolsaButton>
+        </div>
       </div>
 
       <PendientesAprobacion />
@@ -59,14 +86,11 @@ export default async function DashboardPage() {
         <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">
           <p className="font-medium">No pudimos cargar las bolsas.</p>
           <p className="mt-1 text-xs opacity-80">{error.message}</p>
-          <p className="mt-2 text-xs">
-            ¿Ya aplicaste las migraciones de <code>supabase/apply_all.sql</code>?
-          </p>
         </div>
       )}
 
       {items.length === 0 && !error ? (
-        <BolsaEmpty />
+        <BolsaEmpty esAdmin={esAdmin} usuarios={usuarios} />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {items.map((b) => (
