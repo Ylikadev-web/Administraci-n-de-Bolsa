@@ -8,6 +8,12 @@ export const movimientoCreateSchema = z.object({
   monto: z.coerce
     .number({ invalid_type_error: "Monto inválido" })
     .positive("El monto debe ser mayor a 0"),
+  categoria_id: z
+    .string()
+    .uuid()
+    .optional()
+    .or(z.literal(""))
+    .transform((v) => (v ? v : undefined)),
   descripcion: z
     .string()
     .trim()

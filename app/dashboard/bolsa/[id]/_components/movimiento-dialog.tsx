@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -26,17 +27,20 @@ import {
   type MovimientoCreateInput,
 } from "@/lib/schemas/movimiento";
 import { registrarMovimiento } from "@/app/dashboard/bolsa/[id]/actions";
+import type { CategoriaItem } from "@/lib/categorias/queries";
 
 type Props = {
   bolsaId: string;
   moneda: string;
   requiereAprobacion: boolean;
+  categorias: CategoriaItem[];
 };
 
 export function MovimientoDialog({
   bolsaId,
   moneda,
   requiereAprobacion,
+  categorias,
 }: Props) {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
@@ -47,6 +51,7 @@ export function MovimientoDialog({
       bolsa_id: bolsaId,
       tipo: "ingreso",
       monto: 0,
+      categoria_id: "",
       descripcion: "",
       fecha_ejecucion: new Date().toISOString().slice(0, 10),
     },
@@ -54,17 +59,32 @@ export function MovimientoDialog({
 
   const tipo = form.watch("tipo");
 
+  const categoriasFiltradas = categorias.filter(
+    (c) => c.tipo === "ambos" || c.tipo === tipo,
+  );
+
   React.useEffect(() => {
     if (open) {
       form.reset({
         bolsa_id: bolsaId,
         tipo: "ingreso",
         monto: 0,
+        categoria_id: "",
         descripcion: "",
         fecha_ejecucion: new Date().toISOString().slice(0, 10),
       });
     }
   }, [open, bolsaId, form]);
+
+  React.useEffect(() => {
+    const current = form.getValues("categoria_id");
+    if (
+      current &&
+      !categoriasFiltradas.some((c) => c.id === current)
+    ) {
+      form.setValue("categoria_id", "");
+    }
+  }, [tipo, categoriasFiltradas, form]);
 
   const onSubmit = async (values: MovimientoCreateInput) => {
     const result = await registrarMovimiento(values);
@@ -107,7 +127,9 @@ export function MovimientoDialog({
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
-              onClick={() => form.setValue("tipo", "ingreso", { shouldValidate: true })}
+              onClick={() =>
+                form.setValue("tipo", "ingreso", { shouldValidate: true })
+              }
               className={cn(
                 "flex items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors",
                 tipo === "ingreso"
@@ -120,7 +142,9 @@ export function MovimientoDialog({
             </button>
             <button
               type="button"
-              onClick={() => form.setValue("tipo", "gasto", { shouldValidate: true })}
+              onClick={() =>
+                form.setValue("tipo", "gasto", { shouldValidate: true })
+              }
               className={cn(
                 "flex items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors",
                 tipo === "gasto"
@@ -132,11 +156,6 @@ export function MovimientoDialog({
               Gasto
             </button>
           </div>
-          {form.formState.errors.tipo && (
-            <p className="text-xs text-destructive">
-              {form.formState.errors.tipo.message}
-            </p>
-          )}
 
           <div className="space-y-2">
             <Label htmlFor="monto">Monto ({moneda})</Label>
@@ -157,6 +176,31 @@ export function MovimientoDialog({
           </div>
 
           <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="categoria_id">Categoría (opcional)</Label>
+              <Link
+                href="/dashboard/categorias"
+                className="text-xs text-primary hover:underline"
+                onClick={() => setOpen(false)}
+              >
+                Gestionar
+              </Link>
+            </div>
+            <select
+              id="categoria_id"
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              {...form.register("categoria_id")}
+            >
+              <option value="">Sin categoría</option>
+              {categoriasFiltradas.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="descripcion">Descripción (opcional)</Label>
             <Textarea
               id="descripcion"
@@ -164,11 +208,6 @@ export function MovimientoDialog({
               placeholder="Ej. salario, comida, transporte…"
               {...form.register("descripcion")}
             />
-            {form.formState.errors.descripcion && (
-              <p className="text-xs text-destructive">
-                {form.formState.errors.descripcion.message}
-              </p>
-            )}
           </div>
 
           <div className="space-y-2">
@@ -178,11 +217,6 @@ export function MovimientoDialog({
               type="date"
               {...form.register("fecha_ejecucion")}
             />
-            {form.formState.errors.fecha_ejecucion && (
-              <p className="text-xs text-destructive">
-                {form.formState.errors.fecha_ejecucion.message}
-              </p>
-            )}
           </div>
 
           <DialogFooter>

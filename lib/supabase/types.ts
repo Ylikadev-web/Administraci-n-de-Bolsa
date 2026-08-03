@@ -254,6 +254,10 @@ export interface Database {
       };
       anular_movimiento: { Args: { p_movimiento_id: string; p_motivo: string }; Returns: undefined };
       archivar_bolsa: { Args: { p_bolsa_id: string }; Returns: undefined };
+      cerrar_mes_bolsa: {
+        Args: { p_bolsa_id: string; p_mes_contable: string };
+        Returns: string;
+      };
       actualizar_umbral_saldo_bajo: { Args: { p_pct: number }; Returns: undefined };
     };
     Enums: {

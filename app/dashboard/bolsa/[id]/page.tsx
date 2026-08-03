@@ -7,13 +7,16 @@ import { BolsaIcon } from "@/app/dashboard/_components/bolsa-icon";
 import { EditarBolsaTrigger } from "@/app/dashboard/_components/editar-bolsa-trigger";
 import { MovimientoDialog } from "@/app/dashboard/bolsa/[id]/_components/movimiento-dialog";
 import { AporteDialog } from "@/app/dashboard/bolsa/[id]/_components/aporte-dialog";
+import { TransferenciaDialog } from "@/app/dashboard/bolsa/[id]/_components/transferencia-dialog";
+import { CerrarMesButton } from "@/app/dashboard/bolsa/[id]/_components/cerrar-mes-button";
 import {
   MovimientosList,
   type MovimientoListItem,
 } from "@/app/dashboard/bolsa/[id]/_components/movimientos-list";
 import { formatMoney } from "@/lib/utils";
-import { soyMiembroDeBolsa } from "@/lib/bolsas/access";
+import { listMisBolsas, soyMiembroDeBolsa } from "@/lib/bolsas/access";
 import { listDestinosAporte } from "@/lib/aportes/queries";
+import { listMisCategorias } from "@/lib/categorias/queries";
 import type { Bolsa } from "@/lib/supabase/types";
 
 export default async function BolsaDetailPage({
@@ -42,25 +45,47 @@ export default async function BolsaDetailPage({
 
   if (!bolsa) notFound();
 
-  const [{ data: saldoRaw }, { data: perfil }, { data: movimientos, error: movError }, destinos] =
-    await Promise.all([
-      supabase.rpc("saldo_bolsa", { p_bolsa_id: bolsa.id }),
-      supabase
-        .from("perfiles")
-        .select("es_admin")
-        .eq("id", user?.id ?? "")
-        .maybeSingle<{ es_admin: boolean }>(),
-      supabase
-        .from("movimientos")
-        .select(
-          "id, tipo, monto, descripcion, estado, fecha_solicitud, fecha_ejecucion, motivo_rechazo, autor_id, autor:perfiles!movimientos_autor_id_fkey(nombre)",
-        )
-        .eq("bolsa_id", bolsa.id)
-        .order("fecha_solicitud", { ascending: false })
-        .limit(100)
-        .returns<MovimientoListItem[]>(),
-      listDestinosAporte(user.id, bolsa.id),
-    ]);
+  const mesAnterior = (() => {
+    const d = new Date();
+    d.setDate(1);
+    d.setMonth(d.getMonth() - 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
+  })();
+
+  const [
+    { data: saldoRaw },
+    { data: perfil },
+    { data: movimientos, error: movError },
+    destinos,
+    categorias,
+    misBolsas,
+    { data: cierrePrev },
+  ] = await Promise.all([
+    supabase.rpc("saldo_bolsa", { p_bolsa_id: bolsa.id }),
+    supabase
+      .from("perfiles")
+      .select("es_admin")
+      .eq("id", user?.id ?? "")
+      .maybeSingle<{ es_admin: boolean }>(),
+    supabase
+      .from("movimientos")
+      .select(
+        "id, tipo, monto, descripcion, estado, fecha_solicitud, fecha_ejecucion, motivo_rechazo, autor_id, autor:perfiles!movimientos_autor_id_fkey(nombre)",
+      )
+      .eq("bolsa_id", bolsa.id)
+      .order("fecha_solicitud", { ascending: false })
+      .limit(100)
+      .returns<MovimientoListItem[]>(),
+    listDestinosAporte(user.id, bolsa.id),
+    listMisCategorias(user.id),
+    listMisBolsas(user.id),
+    supabase
+      .from("cierres_mensuales")
+      .select("id")
+      .eq("bolsa_id", bolsa.id)
+      .eq("mes_contable", mesAnterior)
+      .maybeSingle(),
+  ]);
 
   const saldo = saldoRaw ? Number(saldoRaw) : 0;
   const esMio = user?.id === bolsa.created_by;
@@ -82,6 +107,7 @@ export default async function BolsaDetailPage({
             Volver
           </Link>
         </Button>
+        <CerrarMesButton bolsaId={bolsa.id} yaCerrado={Boolean(cierrePrev)} />
       </div>
 
       <header className="flex flex-col gap-4 rounded-lg border bg-card p-6 sm:flex-row sm:items-start sm:justify-between">
@@ -130,11 +156,17 @@ export default async function BolsaDetailPage({
             bolsaId={bolsa.id}
             moneda={bolsa.moneda}
             requiereAprobacion={requiereAprobacion}
+            categorias={categorias.items}
           />
           <AporteDialog
             bolsaOrigenId={bolsa.id}
             moneda={bolsa.moneda}
             destinos={destinos.items}
+          />
+          <TransferenciaDialog
+            bolsaOrigenId={bolsa.id}
+            moneda={bolsa.moneda}
+            misBolsas={misBolsas.items}
           />
           {esMio && !bolsa.es_general && !esAsignada && (
             <EditarBolsaTrigger

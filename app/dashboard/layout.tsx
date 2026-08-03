@@ -60,6 +60,20 @@ export default async function DashboardLayout({
               >
                 Préstamos
               </Link>
+              <Link
+                href="/dashboard/categorias"
+                className="hidden sm:inline-flex rounded-md px-2.5 py-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                Categorías
+              </Link>
+              {perfil?.es_admin && (
+                <Link
+                  href="/dashboard/configuracion"
+                  className="hidden md:inline-flex rounded-md px-2.5 py-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                >
+                  Config
+                </Link>
+              )}
             </nav>
           </div>
           <div className="flex items-center gap-1">

@@ -2,33 +2,29 @@
 
 Actualizado: 2026-08-03
 
-## Listo en app (≈ 90%)
+## Listo en app (≈ 95%)
 
 | Módulo | Estado |
 |--------|--------|
-| Auth | ✅ |
-| Dashboard / bolsas propia·general·asignada | ✅ |
-| Movimientos + aprobaciones + campana | ✅ |
-| Privacidad + hardening API vistas | ✅ |
-| Reportes (filtros + CSV) | ✅ |
-| **Aportes / préstamos** (dialog en bolsa) | ✅ |
-| **Préstamos** Me deben / Yo debo + pagar | ✅ |
-| **Anular** movimiento con motivo | ✅ |
+| Auth, dashboard, bolsas, movimientos, aprobaciones, campana | ✅ |
+| Privacidad + API vistas | ✅ |
+| Reportes | ✅ |
+| Aportes / préstamos / anulación | ✅ |
+| **Categorías** (CRUD + select en movimiento) | ✅ |
+| **Transferencias** internas entre mis bolsas | ✅ |
+| **Cierre mensual** (mes anterior) | ✅ |
+| **Umbral saldo bajo** (admin / Config) | ✅ |
 
-## Qué falta (≈ 10%)
+## Qué falta (mínimo)
 
 | Módulo | Notas |
 |--------|--------|
-| Categorías | Schema listo; UI aún manda `null` |
-| Sub-bolsas / transferencias internas | Schema + RPC; sin UI |
-| Alertas saldo bajo / email-Telegram | Config; sin UI |
-| Cierre mensual | Schema; sin UI |
-| Plantillas de reporte guardadas | Tabla lista |
+| Sub-bolsas (compartimentos UI) | Schema `parent_id`; transferencias ya cubren mover saldo |
+| Alertas email / Telegram | Tablas; no conectado a canal real |
+| Plantillas de reporte guardadas | Tabla lista; filtros ya en UI |
+| Cierre automático por calendario | Prefs existen; hoy el cierre es manual |
 
-## SQL opcional (mejor rendimiento / sin service role)
+## SQL opcional
 
-Ejecutar en SQL Editor si aún no:
-
-`supabase/scripts/APORTES_PRESTAMOS_HELPERS.sql`
-
-(RPCs `listar_destinos_aporte` y `mis_prestamos`. La app tiene fallback con service role.)
+- `supabase/scripts/CERRAR_MES_BOLSA.sql` — RPC `cerrar_mes_bolsa` (hay fallback service role)
+- `supabase/scripts/APORTES_PRESTAMOS_HELPERS.sql` — si aún no lo corriste

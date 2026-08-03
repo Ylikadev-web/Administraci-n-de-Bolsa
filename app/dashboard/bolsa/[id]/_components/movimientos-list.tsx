@@ -47,7 +47,7 @@ function TipoIcon({ tipo }: { tipo: TipoMovimiento }) {
   );
 }
 
-function tipoLabel(tipo: TipoMovimiento): string {
+function tipoLabel(tipo: TipoMovimiento, descripcion?: string | null): string {
   switch (tipo) {
     case "ingreso":
       return "Ingreso";
@@ -60,13 +60,20 @@ function tipoLabel(tipo: TipoMovimiento): string {
     case "aporte_recibido":
       return "Aporte recibido";
     case "transferencia_interna":
+      if (descripcion === "INTERN_OUT") return "Transferencia salida";
+      if (descripcion === "INTERN_IN") return "Transferencia entrada";
       return "Transferencia";
     default:
       return tipo;
   }
 }
 
-function signo(tipo: TipoMovimiento): number {
+function signo(tipo: TipoMovimiento, descripcion?: string | null): number {
+  if (tipo === "transferencia_interna") {
+    if (descripcion === "INTERN_OUT") return -1;
+    if (descripcion === "INTERN_IN") return 1;
+    return 0;
+  }
   if (
     tipo === "ingreso" ||
     tipo === "saldo_apertura" ||
@@ -108,7 +115,7 @@ export function MovimientosList({
     <div className="overflow-hidden rounded-lg border bg-card">
       <ul className="divide-y">
         {items.map((m) => {
-          const s = signo(m.tipo);
+          const s = signo(m.tipo, m.descripcion);
           const pendiente = m.estado === "pendiente_aprobacion";
           return (
             <li
@@ -119,11 +126,15 @@ export function MovimientosList({
                 <TipoIcon tipo={m.tipo} />
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-medium">{tipoLabel(m.tipo)}</p>
+                    <p className="font-medium">
+                      {tipoLabel(m.tipo, m.descripcion)}
+                    </p>
                     <EstadoBadge estado={m.estado} />
                   </div>
                   <p className="mt-0.5 truncate text-sm text-muted-foreground">
-                    {m.descripcion?.trim() || "Sin descripción"}
+                    {m.tipo === "transferencia_interna"
+                      ? "Entre tus bolsas"
+                      : m.descripcion?.trim() || "Sin descripción"}
                     {m.autor?.nombre ? ` · ${m.autor.nombre}` : ""}
                   </p>
                   <p className="mt-0.5 text-xs text-muted-foreground">
