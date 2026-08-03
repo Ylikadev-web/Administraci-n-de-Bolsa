@@ -6,7 +6,13 @@ export const metadata = {
   title: "Entrar — Bolsas",
 };
 
-export default function LoginPage() {
+export default function LoginPage({
+  searchParams,
+}: {
+  searchParams?: { reason?: string };
+}) {
+  const sessionReset = searchParams?.reason === "session";
+
   return (
     <main className="min-h-dvh">
       <header className="container flex items-center justify-between py-6">
@@ -26,6 +32,13 @@ export default function LoginPage() {
               Entra con tu correo y contraseña, o pide un enlace mágico.
             </p>
           </div>
+          {sessionReset && (
+            <div className="mb-4 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-left text-xs text-amber-800 dark:text-amber-200">
+              Sesión reiniciada. Si viste un error de JWT/hora: en Windows
+              activa &quot;Ajustar la hora automáticamente&quot; y luego entra de
+              nuevo.
+            </div>
+          )}
           <LoginForm />
         </div>
       </div>
