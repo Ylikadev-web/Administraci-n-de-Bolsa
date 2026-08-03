@@ -2,42 +2,37 @@
 
 Actualizado: 2026-08-03
 
-## Listo en producción / app (≈ 65%)
+## Listo en app (≈ 75%)
 
 | Módulo | Estado |
 |--------|--------|
 | Auth (contraseña + magic link) | ✅ |
 | Dashboard de bolsas | ✅ |
-| Bolsa propia (CRUD, movimientos, saldo) | ✅ |
-| Bolsa General (crear, co-owners, aprobación) | ✅ |
-| Bolsa asignada (admin → usuario) | ✅ |
-| Privacidad por membresía (UI + script SQL) | ✅ |
-| Aprobar/rechazar en detalle de bolsa | ✅ |
-| **Campana de notificaciones (Nesim)** | ✅ (este PR) |
-| Aprobar/rechazar varias desde la campana | ✅ (este PR) |
+| Bolsa propia / General / asignada | ✅ |
+| Movimientos + aprobaciones | ✅ |
+| Campana de notificaciones (Nesim) | ✅ |
+| Privacidad por membresía | ✅ |
+| Hardening API vistas (security_invoker) | ✅ (SQL aplicado) |
+| **Reportes** (filtros + resumen + CSV) | ✅ |
 
-## Falta desarrollar (≈ 35%)
+## Qué falta (≈ 25%)
 
-| Módulo | Notas |
-|--------|--------|
-| **Reportes** | Solo existe tabla `plantillas_reporte` en BD. **No hay pantalla ni menú.** |
-| Aportes entre usuarios | RPC `crear_aporte` listo; sin UI |
-| Préstamos (plazos, pestaña “Me deben / Yo debo”) | Vistas SQL listas; sin UI |
-| Anular movimientos | RPC listo; sin UI |
-| Categorías de gasto/ingreso | Schema listo; UI siempre manda `null` |
-| Sub-bolsas / compartimentos | Schema `parent_id`; sin UI |
-| Transferencias internas | RPC listo; sin UI |
-| Umbral saldo bajo + alertas | RPC/config; sin UI |
-| Notificaciones email/Telegram | Tablas/env; no conectado |
-| Cierre mensual | Schema; sin UI |
+| # | Módulo | Notas |
+|---|--------|--------|
+| 1 | Aportes entre usuarios | RPC listo; sin UI |
+| 2 | Préstamos (Me deben / Yo debo) | Vistas SQL listas; sin UI |
+| 3 | Anular movimiento con motivo | RPC listo; sin UI |
+| 4 | Categorías | Schema listo; UI manda `null` |
+| 5 | Sub-bolsas / transferencias | Schema + RPC; sin UI |
+| 6 | Alertas saldo bajo / email-Telegram | Config; sin UI |
+| 7 | Cierre mensual | Schema; sin UI |
+| 8 | Plantillas de reporte guardadas | Tabla lista; UI aún no guarda |
 
-## Sobre “Reportes”
+## Reportes
 
-No lo ves porque **aún no está construido en la app**. El diseño del producto lo contempla (plantillas privadas por usuario, exportes), pero la UI y la generación de PDF/Excel no se han implementado.
+Ruta: `/dashboard/reportes` (enlace en el header).
 
-Orden sugerido para lo que falta:
-1. Reportes básicos (movimientos por bolsa / periodo / usuario)
-2. Aportes + préstamos
-3. Anulación con motivo
-4. Categorías
-5. Alertas / canales
+- Filtra por bolsa, fechas, tipo y estado
+- Solo bolsas donde eres miembro
+- Resumen: ingresos / gastos / neto
+- Exportar CSV (Excel)

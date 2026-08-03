@@ -36,10 +36,26 @@ export default async function DashboardLayout({
     <div className="min-h-dvh bg-background">
       <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
         <div className="container flex h-14 items-center justify-between">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-lg bg-primary" />
-            <span className="font-semibold tracking-tight">Bolsas</span>
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link href="/dashboard" className="flex items-center gap-2">
+              <div className="h-7 w-7 rounded-lg bg-primary" />
+              <span className="font-semibold tracking-tight">Bolsas</span>
+            </Link>
+            <nav className="flex items-center gap-1 text-sm">
+              <Link
+                href="/dashboard"
+                className="rounded-md px-2.5 py-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                Mis bolsas
+              </Link>
+              <Link
+                href="/dashboard/reportes"
+                className="rounded-md px-2.5 py-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                Reportes
+              </Link>
+            </nav>
+          </div>
           <div className="flex items-center gap-1">
             {pendientes.esAdmin && (
               <NotificationBell items={pendientes.items} />
