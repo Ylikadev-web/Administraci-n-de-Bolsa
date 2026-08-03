@@ -2,42 +2,38 @@
 
 Actualizado: 2026-08-03
 
-## Listo en producción / app (≈ 65%)
+## Listo en app (≈ 65–70%)
 
 | Módulo | Estado |
 |--------|--------|
 | Auth (contraseña + magic link) | ✅ |
 | Dashboard de bolsas | ✅ |
-| Bolsa propia (CRUD, movimientos, saldo) | ✅ |
-| Bolsa General (crear, co-owners, aprobación) | ✅ |
-| Bolsa asignada (admin → usuario) | ✅ |
-| Privacidad por membresía (UI + script SQL) | ✅ |
-| Aprobar/rechazar en detalle de bolsa | ✅ |
-| **Campana de notificaciones (Nesim)** | ✅ (este PR) |
-| Aprobar/rechazar varias desde la campana | ✅ (este PR) |
+| Bolsa propia / General / asignada | ✅ |
+| Movimientos + aprobaciones | ✅ |
+| Campana de notificaciones (Nesim) | ✅ |
+| Privacidad por membresía (UI + SQL) | ✅ |
+| Hardening API vistas (security_invoker + revoke anon) | ⏳ aplicar SQL en Studio |
 
-## Falta desarrollar (≈ 35%)
+## Qué falta desarrollar en UI (para ir “super avanzados”)
 
-| Módulo | Notas |
-|--------|--------|
-| **Reportes** | Solo existe tabla `plantillas_reporte` en BD. **No hay pantalla ni menú.** |
-| Aportes entre usuarios | RPC `crear_aporte` listo; sin UI |
-| Préstamos (plazos, pestaña “Me deben / Yo debo”) | Vistas SQL listas; sin UI |
-| Anular movimientos | RPC listo; sin UI |
-| Categorías de gasto/ingreso | Schema listo; UI siempre manda `null` |
-| Sub-bolsas / compartimentos | Schema `parent_id`; sin UI |
-| Transferencias internas | RPC listo; sin UI |
-| Umbral saldo bajo + alertas | RPC/config; sin UI |
-| Notificaciones email/Telegram | Tablas/env; no conectado |
-| Cierre mensual | Schema; sin UI |
+Orden recomendado (mayor impacto primero):
+
+| # | Módulo | Por qué | Esfuerzo técnico |
+|---|--------|---------|------------------|
+| 1 | **Reportes** | No hay pantalla; solo tabla `plantillas_reporte` | Nueva ruta + filtros + export CSV/PDF |
+| 2 | **Aportes** entre usuarios | RPC `crear_aporte` listo | Formulario + historial |
+| 3 | **Préstamos** (“Me deben / Yo debo”) | Vistas SQL listas (tras fix seguridad) | Tabs + plazos + pagos |
+| 4 | **Anular** movimiento con motivo | RPC listo | Acción + diálogo motivo |
+| 5 | **Categorías** | Schema listo; UI manda `null` | CRUD + select en movimientos |
+| 6 | Sub-bolsas / transferencias internas | Schema + RPC | UI compartimentos |
+| 7 | Umbral saldo bajo + alertas | Config/RPC | Settings + aviso en campana |
+| 8 | Email / Telegram | Tablas env | Integración canales |
+| 9 | Cierre mensual | Schema | Flujo admin fin de mes |
 
 ## Sobre “Reportes”
 
-No lo ves porque **aún no está construido en la app**. El diseño del producto lo contempla (plantillas privadas por usuario, exportes), pero la UI y la generación de PDF/Excel no se han implementado.
+No aparece en el menú porque **aún no está construido**. Es el siguiente bloque natural para cerrar el ciclo operativo (ver → mover → aprobar → reportar).
 
-Orden sugerido para lo que falta:
-1. Reportes básicos (movimientos por bolsa / periodo / usuario)
-2. Aportes + préstamos
-3. Anulación con motivo
-4. Categorías
-5. Alertas / canales
+## Seguridad API (esta entrega)
+
+Ver `docs/SEGURIDAD-API.md` y ejecutar `supabase/scripts/SEGURO_VISTAS_API.sql` en el SQL Editor.
