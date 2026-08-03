@@ -1,11 +1,17 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Lock, Users, Key, Plus, MoreVertical, Pencil } from "lucide-react";
+import { ArrowLeft, Lock, Users, Key, Pencil } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { BolsaIcon } from "@/app/dashboard/_components/bolsa-icon";
 import { EditarBolsaTrigger } from "@/app/dashboard/_components/editar-bolsa-trigger";
+import { MovimientoDialog } from "@/app/dashboard/bolsa/[id]/_components/movimiento-dialog";
+import {
+  MovimientosList,
+  type MovimientoListItem,
+} from "@/app/dashboard/bolsa/[id]/_components/movimientos-list";
 import { formatMoney } from "@/lib/utils";
+import { soyMiembroDeBolsa } from "@/lib/bolsas/access";
 import type { Bolsa } from "@/lib/supabase/types";
 
 export default async function BolsaDetailPage({
@@ -16,6 +22,16 @@ export default async function BolsaDetailPage({
   searchParams?: { edit?: string };
 }) {
   const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) notFound();
+
+  // Privacidad: aunque RLS admin antiguo permita leer, la app exige membresía.
+  const esMiembro = await soyMiembroDeBolsa(user.id, params.id);
+  if (!esMiembro) notFound();
+
   const { data: bolsa } = await supabase
     .from("bolsas")
     .select("*")
@@ -24,15 +40,35 @@ export default async function BolsaDetailPage({
 
   if (!bolsa) notFound();
 
-  const { data: saldoRaw } = await supabase.rpc("saldo_bolsa", {
-    p_bolsa_id: bolsa.id,
-  });
-  const saldo = saldoRaw ? Number(saldoRaw) : 0;
+  const [{ data: saldoRaw }, { data: perfil }, { data: movimientos, error: movError }] =
+    await Promise.all([
+      supabase.rpc("saldo_bolsa", { p_bolsa_id: bolsa.id }),
+      supabase
+        .from("perfiles")
+        .select("es_admin")
+        .eq("id", user?.id ?? "")
+        .maybeSingle<{ es_admin: boolean }>(),
+      supabase
+        .from("movimientos")
+        .select(
+          "id, tipo, monto, descripcion, estado, fecha_solicitud, fecha_ejecucion, motivo_rechazo, autor_id, autor:perfiles!movimientos_autor_id_fkey(nombre)",
+        )
+        .eq("bolsa_id", bolsa.id)
+        .order("fecha_solicitud", { ascending: false })
+        .limit(100)
+        .returns<MovimientoListItem[]>(),
+    ]);
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const saldo = saldoRaw ? Number(saldoRaw) : 0;
   const esMio = user?.id === bolsa.created_by;
+  const esAdmin = Boolean(perfil?.es_admin);
+  const esAsignada = bolsa.assigned_by_admin !== null;
+  const requiereAprobacion =
+    (bolsa.es_general || esAsignada) && !esAdmin;
+  const puedeAprobar =
+    esAdmin && (bolsa.es_general || esAsignada);
+
+  const items = movimientos ?? [];
 
   return (
     <div className="space-y-6">
@@ -63,7 +99,7 @@ export default async function BolsaDetailPage({
                   <Users className="h-3 w-3" />
                   Bolsa General
                 </span>
-              ) : bolsa.assigned_by_admin ? (
+              ) : esAsignada ? (
                 <span className="inline-flex items-center gap-1 rounded-md bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
                   <Key className="h-3 w-3" />
                   Asignada por administrador
@@ -87,11 +123,12 @@ export default async function BolsaDetailPage({
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button disabled title="Se habilita en el próximo PR">
-            <Plus className="mr-2 h-4 w-4" />
-            Registrar movimiento
-          </Button>
-          {esMio && !bolsa.es_general && !bolsa.assigned_by_admin && (
+          <MovimientoDialog
+            bolsaId={bolsa.id}
+            moneda={bolsa.moneda}
+            requiereAprobacion={requiereAprobacion}
+          />
+          {esMio && !bolsa.es_general && !esAsignada && (
             <EditarBolsaTrigger
               autoOpen={searchParams?.edit === "1"}
               bolsa={{
@@ -114,26 +151,40 @@ export default async function BolsaDetailPage({
         </div>
       </header>
 
-      <section className="grid gap-4 lg:grid-cols-[1fr,320px]">
-        <div className="rounded-lg border bg-card p-8 text-center">
-          <div className="mx-auto mb-3 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <MoreVertical className="h-5 w-5" />
+      <section className="grid gap-4 lg:grid-cols-[1fr,300px]">
+        <div className="space-y-3">
+          <div className="flex items-end justify-between">
+            <div>
+              <h2 className="font-semibold">Movimientos</h2>
+              <p className="text-sm text-muted-foreground">
+                Últimos {items.length} registros
+              </p>
+            </div>
           </div>
-          <h2 className="font-semibold">Movimientos</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            El listado con drawer lateral llega en el próximo PR.
-          </p>
+          {movError ? (
+            <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">
+              <p className="font-medium">No pudimos cargar los movimientos.</p>
+              <p className="mt-1 text-xs opacity-80">{movError.message}</p>
+            </div>
+          ) : (
+            <MovimientosList
+              items={items}
+              moneda={bolsa.moneda}
+              bolsaId={bolsa.id}
+              puedeAprobar={puedeAprobar}
+            />
+          )}
         </div>
-        <aside className="rounded-lg border bg-card p-6">
+        <aside className="h-fit rounded-lg border bg-card p-6">
           <h3 className="font-semibold">Reglas de esta bolsa</h3>
           <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
             <li className="flex items-start gap-2">
               <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-foreground/40" />
               {bolsa.es_general
-                ? "Todos los movimientos pasan por la aprobación del administrador."
-                : bolsa.assigned_by_admin
-                ? "Solo puedes solicitar ingresos y gastos; el administrador aprueba."
-                : "Tú registras movimientos libremente en tu bolsa propia."}
+                ? "Todos los movimientos pasan por la aprobación del administrador (salvo los del admin)."
+                : esAsignada
+                  ? "Solo puedes solicitar ingresos y gastos; el administrador aprueba."
+                  : "Tú registras movimientos libremente en tu bolsa propia."}
             </li>
             <li className="flex items-start gap-2">
               <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-foreground/40" />
