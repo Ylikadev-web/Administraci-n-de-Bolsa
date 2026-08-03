@@ -11,6 +11,7 @@ import {
   type MovimientoListItem,
 } from "@/app/dashboard/bolsa/[id]/_components/movimientos-list";
 import { formatMoney } from "@/lib/utils";
+import { soyMiembroDeBolsa } from "@/lib/bolsas/access";
 import type { Bolsa } from "@/lib/supabase/types";
 
 export default async function BolsaDetailPage({
@@ -24,6 +25,12 @@ export default async function BolsaDetailPage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  if (!user) notFound();
+
+  // Privacidad: aunque RLS admin antiguo permita leer, la app exige membresía.
+  const esMiembro = await soyMiembroDeBolsa(user.id, params.id);
+  if (!esMiembro) notFound();
 
   const { data: bolsa } = await supabase
     .from("bolsas")
