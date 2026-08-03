@@ -208,6 +208,39 @@ export interface Database {
         };
         Returns: string;
       };
+      listar_destinos_aporte: {
+        Args: Record<string, never>;
+        Returns: {
+          bolsa_id: string;
+          nombre: string;
+          moneda: string;
+          usuario_id: string;
+          usuario_nombre: string;
+          es_general: boolean;
+        }[];
+      };
+      mis_prestamos: {
+        Args: Record<string, never>;
+        Returns: {
+          prestamo_id: string;
+          acreedor_id: string;
+          acreedor_nombre: string;
+          deudor_id: string;
+          deudor_nombre: string;
+          bolsa_origen_id: string;
+          bolsa_destino_id: string;
+          monto_original: number;
+          monto_pagado: number;
+          saldo_pendiente: number;
+          plazo_dias: number;
+          fecha_ejecucion: string;
+          fecha_vencimiento: string;
+          estado_vencimiento: string;
+          descripcion: string;
+          moneda: string;
+          rol: string;
+        }[];
+      };
       cancelar_aporte_pendiente: { Args: { p_aporte_id: string }; Returns: undefined };
       crear_transferencia_interna: {
         Args: {
@@ -221,6 +254,10 @@ export interface Database {
       };
       anular_movimiento: { Args: { p_movimiento_id: string; p_motivo: string }; Returns: undefined };
       archivar_bolsa: { Args: { p_bolsa_id: string }; Returns: undefined };
+      cerrar_mes_bolsa: {
+        Args: { p_bolsa_id: string; p_mes_contable: string };
+        Returns: string;
+      };
       actualizar_umbral_saldo_bajo: { Args: { p_pct: number }; Returns: undefined };
     };
     Enums: {

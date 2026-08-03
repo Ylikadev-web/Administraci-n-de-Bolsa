@@ -1,0 +1,364 @@
+{
+  "total": 51,
+  "pass": 51,
+  "fail": 0,
+  "cases": [
+    {
+      "category": "Auth",
+      "name": "Login password nesim",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "Auth",
+      "name": "Login password moises",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "Auth",
+      "name": "Login password itzyk",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "Auth/Perfiles",
+      "name": "Nesim es_admin=true",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "Auth/Perfiles",
+      "name": "Moisés es_admin=false",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "Auth/Perfiles",
+      "name": "Itzyk es_admin=false",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "Bolsa General",
+      "name": "Estado inicial sin bolsas",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "Bolsa General / RLS",
+      "name": "Moisés NO puede crear Bolsa General",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "Bolsa General",
+      "name": "Nesim crea Bolsa General desde 0",
+      "ok": true,
+      "detail": "91fa2d19",
+      "lens": "fullstack"
+    },
+    {
+      "category": "Bolsa General",
+      "name": "No permite segunda General activa",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "Bolsa General",
+      "name": "3 co-propietarios (Nesim+Moisés+Itzyk)",
+      "ok": true,
+      "detail": "3",
+      "lens": "fullstack"
+    },
+    {
+      "category": "RLS Visibilidad",
+      "name": "Nesim ve Bolsa General",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "RLS Visibilidad",
+      "name": "Moisés ve Bolsa General",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "RLS Visibilidad",
+      "name": "Itzyk ve Bolsa General",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "Contable / Saldo",
+      "name": "General inicia en 0",
+      "ok": true,
+      "detail": "0",
+      "lens": "contable"
+    },
+    {
+      "category": "Bolsa Propia",
+      "name": "Nesim crea propia con saldo inicial 1000",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "Contable / Saldo",
+      "name": "Propia saldo = 1000 tras apertura",
+      "ok": true,
+      "detail": "1000.0",
+      "lens": "contable"
+    },
+    {
+      "category": "RLS Visibilidad",
+      "name": "Moisés NO ve bolsa propia de Nesim",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "Movimientos Propia",
+      "name": "Ingreso 250 activo inmediato",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "Movimientos Propia",
+      "name": "Gasto 100 activo inmediato",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "Contable / Saldo",
+      "name": "Propia saldo = 1150 (1000+250-100)",
+      "ok": true,
+      "detail": "1150.0",
+      "lens": "contable"
+    },
+    {
+      "category": "Contable / Reglas",
+      "name": "Bloquea gasto > saldo en propia",
+      "ok": true,
+      "detail": "",
+      "lens": "contable"
+    },
+    {
+      "category": "Validaciones",
+      "name": "Rechaza monto 0",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "Aprobaciones",
+      "name": "Gasto Moisés en General queda pendiente",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "Contable / Saldo",
+      "name": "Pendiente NO afecta saldo General",
+      "ok": true,
+      "detail": "0",
+      "lens": "contable"
+    },
+    {
+      "category": "Aprobaciones / RLS",
+      "name": "Moisés NO puede aprobar",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "Aprobaciones",
+      "name": "Nesim rechaza con motivo",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "Contable / Saldo",
+      "name": "Tras rechazo saldo sigue 0",
+      "ok": true,
+      "detail": "0",
+      "lens": "contable"
+    },
+    {
+      "category": "Validaciones",
+      "name": "Rechazo exige motivo ≥3 chars",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "Aprobaciones",
+      "name": "Nesim aprueba ingreso 500",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "Contable / Saldo",
+      "name": "General saldo = 500 tras aprobar ingreso",
+      "ok": true,
+      "detail": "500.0",
+      "lens": "contable"
+    },
+    {
+      "category": "Aprobaciones",
+      "name": "Gasto de Nesim en General auto-activo",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "Contable / Saldo",
+      "name": "General saldo = 450 tras gasto Nesim",
+      "ok": true,
+      "detail": "450.0",
+      "lens": "contable"
+    },
+    {
+      "category": "Bolsa Asignada",
+      "name": "Nesim asigna bolsa a Moisés con 200",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "RLS Visibilidad",
+      "name": "Moisés ve su bolsa asignada",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "RLS Visibilidad",
+      "name": "Itzyk NO ve bolsa asignada a Moisés",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "Contable / Saldo",
+      "name": "Asignada saldo inicial 200",
+      "ok": true,
+      "detail": "200.0",
+      "lens": "contable"
+    },
+    {
+      "category": "Bolsa Asignada",
+      "name": "Gasto Moisés en asignada queda pendiente",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "Contable / Saldo",
+      "name": "Pendiente no baja saldo asignada",
+      "ok": true,
+      "detail": "200.0",
+      "lens": "contable"
+    },
+    {
+      "category": "Aprobaciones",
+      "name": "Nesim aprueba gasto en asignada",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "Contable / Saldo",
+      "name": "Asignada saldo = 170 tras aprobar",
+      "ok": true,
+      "detail": "170.0",
+      "lens": "contable"
+    },
+    {
+      "category": "Bolsa Asignada / RLS",
+      "name": "Moisés NO puede asignar bolsas",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "Archivado",
+      "name": "No se puede archivar Bolsa General",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "Archivado",
+      "name": "No archiva propia con saldo ≠ 0",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "Archivado",
+      "name": "Archiva propia con saldo 0",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "CRUD Bolsa",
+      "name": "Editar nombre de propia",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "RLS Escritura",
+      "name": "Moisés no altera bolsa de Nesim",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "Producción",
+      "name": "GET /login = 200",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "Producción",
+      "name": "Login sin 'Cuentas de prueba'",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "Producción",
+      "name": "Bundle tiene URL Supabase (check via login page loads)",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    },
+    {
+      "category": "Limpieza",
+      "name": "BD sin bolsas demo tras QA (perfiles intactos)",
+      "ok": true,
+      "detail": "",
+      "lens": "fullstack"
+    }
+  ]
+}

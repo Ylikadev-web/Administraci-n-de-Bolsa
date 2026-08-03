@@ -8,6 +8,12 @@ import {
   type BolsaCreateInput,
   type BolsaUpdateInput,
 } from "@/lib/schemas/bolsa";
+import {
+  bolsaGeneralSchema,
+  asignarBolsaSchema,
+  type BolsaGeneralInput,
+  type AsignarBolsaInput,
+} from "@/lib/schemas/admin-bolsa";
 
 type ActionResult<T = unknown> =
   | { ok: true; data: T }
@@ -56,6 +62,102 @@ export async function crearBolsa(
 
   if (error || !data) {
     return { ok: false, error: error?.message ?? "No se pudo crear la bolsa" };
+  }
+
+  revalidatePath("/dashboard");
+  return { ok: true, data: { id: data as unknown as string } };
+}
+
+export async function crearBolsaGeneral(
+  input: BolsaGeneralInput,
+): Promise<ActionResult<{ id: string }>> {
+  const parsed = bolsaGeneralSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.errors[0]?.message ?? "Datos inválidos" };
+  }
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "No autenticado" };
+
+  const { data: perfil } = await supabase
+    .from("perfiles")
+    .select("es_admin")
+    .eq("id", user.id)
+    .maybeSingle<{ es_admin: boolean }>();
+  if (!perfil?.es_admin) {
+    return { ok: false, error: "Solo el administrador puede crear la Bolsa General" };
+  }
+
+  const { nombre, color, icono, moneda, co_owner_ids } = parsed.data;
+  const { data, error } = await supabase.rpc("crear_bolsa_general", {
+    p_nombre: nombre,
+    p_color: color,
+    p_icono: icono,
+    p_moneda: moneda,
+    p_co_owners: co_owner_ids,
+  });
+
+  if (error || !data) {
+    return {
+      ok: false,
+      error: error?.message ?? "No se pudo crear la Bolsa General",
+    };
+  }
+
+  revalidatePath("/dashboard");
+  return { ok: true, data: { id: data as unknown as string } };
+}
+
+export async function asignarBolsa(
+  input: AsignarBolsaInput,
+): Promise<ActionResult<{ id: string }>> {
+  const parsed = asignarBolsaSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.errors[0]?.message ?? "Datos inválidos" };
+  }
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "No autenticado" };
+
+  const { data: perfil } = await supabase
+    .from("perfiles")
+    .select("es_admin")
+    .eq("id", user.id)
+    .maybeSingle<{ es_admin: boolean }>();
+  if (!perfil?.es_admin) {
+    return { ok: false, error: "Solo el administrador puede asignar bolsas" };
+  }
+
+  const {
+    nombre,
+    descripcion,
+    color,
+    icono,
+    moneda,
+    usuario_asignado,
+    saldo_inicial,
+    permite_saldo_negativo,
+  } = parsed.data;
+
+  const { data, error } = await supabase.rpc("asignar_bolsa_a_usuario", {
+    p_nombre: nombre,
+    p_descripcion: descripcion || null,
+    p_color: color,
+    p_icono: icono || null,
+    p_moneda: moneda,
+    p_usuario_asignado: usuario_asignado,
+    p_saldo_inicial: Number(saldo_inicial ?? 0),
+    p_permite_saldo_negativo: permite_saldo_negativo,
+  });
+
+  if (error || !data) {
+    return { ok: false, error: error?.message ?? "No se pudo asignar la bolsa" };
   }
 
   revalidatePath("/dashboard");
