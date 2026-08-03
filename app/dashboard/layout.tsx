@@ -54,6 +54,12 @@ export default async function DashboardLayout({
               >
                 Reportes
               </Link>
+              <Link
+                href="/dashboard/prestamos"
+                className="rounded-md px-2.5 py-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                Préstamos
+              </Link>
             </nav>
           </div>
           <div className="flex items-center gap-1">

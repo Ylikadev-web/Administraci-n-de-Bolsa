@@ -2,6 +2,7 @@ import { ArrowDownLeft, ArrowUpRight, Clock, Ban, CircleSlash } from "lucide-rea
 import { formatMoney, formatDate, cn } from "@/lib/utils";
 import type { EstadoMovimiento, TipoMovimiento } from "@/lib/supabase/types";
 import { MovimientoRowActions } from "@/app/dashboard/bolsa/[id]/_components/movimiento-row-actions";
+import { AnularMovimientoButton } from "@/app/dashboard/bolsa/[id]/_components/anular-movimiento-button";
 
 export type MovimientoListItem = {
   id: string;
@@ -82,11 +83,15 @@ export function MovimientosList({
   moneda,
   bolsaId,
   puedeAprobar,
+  currentUserId,
+  esAdmin,
 }: {
   items: MovimientoListItem[];
   moneda: string;
   bolsaId: string;
   puedeAprobar: boolean;
+  currentUserId: string;
+  esAdmin: boolean;
 }) {
   if (items.length === 0) {
     return (
@@ -146,12 +151,21 @@ export function MovimientosList({
                   {s > 0 ? "+" : s < 0 ? "−" : ""}
                   {formatMoney(Math.abs(Number(m.monto)), moneda)}
                 </p>
-                {pendiente && puedeAprobar && (
-                  <MovimientoRowActions
-                    movimientoId={m.id}
-                    bolsaId={bolsaId}
-                  />
-                )}
+                <div className="flex flex-wrap items-center justify-end gap-1">
+                  {pendiente && puedeAprobar && (
+                    <MovimientoRowActions
+                      movimientoId={m.id}
+                      bolsaId={bolsaId}
+                    />
+                  )}
+                  {m.estado === "activo" &&
+                    (m.autor_id === currentUserId || esAdmin) && (
+                      <AnularMovimientoButton
+                        movimientoId={m.id}
+                        bolsaId={bolsaId}
+                      />
+                    )}
+                </div>
               </div>
             </li>
           );

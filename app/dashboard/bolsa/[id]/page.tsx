@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/button";
 import { BolsaIcon } from "@/app/dashboard/_components/bolsa-icon";
 import { EditarBolsaTrigger } from "@/app/dashboard/_components/editar-bolsa-trigger";
 import { MovimientoDialog } from "@/app/dashboard/bolsa/[id]/_components/movimiento-dialog";
+import { AporteDialog } from "@/app/dashboard/bolsa/[id]/_components/aporte-dialog";
 import {
   MovimientosList,
   type MovimientoListItem,
 } from "@/app/dashboard/bolsa/[id]/_components/movimientos-list";
 import { formatMoney } from "@/lib/utils";
 import { soyMiembroDeBolsa } from "@/lib/bolsas/access";
+import { listDestinosAporte } from "@/lib/aportes/queries";
 import type { Bolsa } from "@/lib/supabase/types";
 
 export default async function BolsaDetailPage({
@@ -40,7 +42,7 @@ export default async function BolsaDetailPage({
 
   if (!bolsa) notFound();
 
-  const [{ data: saldoRaw }, { data: perfil }, { data: movimientos, error: movError }] =
+  const [{ data: saldoRaw }, { data: perfil }, { data: movimientos, error: movError }, destinos] =
     await Promise.all([
       supabase.rpc("saldo_bolsa", { p_bolsa_id: bolsa.id }),
       supabase
@@ -57,6 +59,7 @@ export default async function BolsaDetailPage({
         .order("fecha_solicitud", { ascending: false })
         .limit(100)
         .returns<MovimientoListItem[]>(),
+      listDestinosAporte(user.id, bolsa.id),
     ]);
 
   const saldo = saldoRaw ? Number(saldoRaw) : 0;
@@ -128,6 +131,11 @@ export default async function BolsaDetailPage({
             moneda={bolsa.moneda}
             requiereAprobacion={requiereAprobacion}
           />
+          <AporteDialog
+            bolsaOrigenId={bolsa.id}
+            moneda={bolsa.moneda}
+            destinos={destinos.items}
+          />
           {esMio && !bolsa.es_general && !esAsignada && (
             <EditarBolsaTrigger
               autoOpen={searchParams?.edit === "1"}
@@ -172,6 +180,8 @@ export default async function BolsaDetailPage({
               moneda={bolsa.moneda}
               bolsaId={bolsa.id}
               puedeAprobar={puedeAprobar}
+              currentUserId={user.id}
+              esAdmin={esAdmin}
             />
           )}
         </div>

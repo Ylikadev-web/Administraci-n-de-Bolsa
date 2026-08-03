@@ -2,37 +2,33 @@
 
 Actualizado: 2026-08-03
 
-## Listo en app (≈ 75%)
+## Listo en app (≈ 90%)
 
 | Módulo | Estado |
 |--------|--------|
-| Auth (contraseña + magic link) | ✅ |
-| Dashboard de bolsas | ✅ |
-| Bolsa propia / General / asignada | ✅ |
-| Movimientos + aprobaciones | ✅ |
-| Campana de notificaciones (Nesim) | ✅ |
-| Privacidad por membresía | ✅ |
-| Hardening API vistas (security_invoker) | ✅ (SQL aplicado) |
-| **Reportes** (filtros + resumen + CSV) | ✅ |
+| Auth | ✅ |
+| Dashboard / bolsas propia·general·asignada | ✅ |
+| Movimientos + aprobaciones + campana | ✅ |
+| Privacidad + hardening API vistas | ✅ |
+| Reportes (filtros + CSV) | ✅ |
+| **Aportes / préstamos** (dialog en bolsa) | ✅ |
+| **Préstamos** Me deben / Yo debo + pagar | ✅ |
+| **Anular** movimiento con motivo | ✅ |
 
-## Qué falta (≈ 25%)
+## Qué falta (≈ 10%)
 
-| # | Módulo | Notas |
-|---|--------|--------|
-| 1 | Aportes entre usuarios | RPC listo; sin UI |
-| 2 | Préstamos (Me deben / Yo debo) | Vistas SQL listas; sin UI |
-| 3 | Anular movimiento con motivo | RPC listo; sin UI |
-| 4 | Categorías | Schema listo; UI manda `null` |
-| 5 | Sub-bolsas / transferencias | Schema + RPC; sin UI |
-| 6 | Alertas saldo bajo / email-Telegram | Config; sin UI |
-| 7 | Cierre mensual | Schema; sin UI |
-| 8 | Plantillas de reporte guardadas | Tabla lista; UI aún no guarda |
+| Módulo | Notas |
+|--------|--------|
+| Categorías | Schema listo; UI aún manda `null` |
+| Sub-bolsas / transferencias internas | Schema + RPC; sin UI |
+| Alertas saldo bajo / email-Telegram | Config; sin UI |
+| Cierre mensual | Schema; sin UI |
+| Plantillas de reporte guardadas | Tabla lista |
 
-## Reportes
+## SQL opcional (mejor rendimiento / sin service role)
 
-Ruta: `/dashboard/reportes` (enlace en el header).
+Ejecutar en SQL Editor si aún no:
 
-- Filtra por bolsa, fechas, tipo y estado
-- Solo bolsas donde eres miembro
-- Resumen: ingresos / gastos / neto
-- Exportar CSV (Excel)
+`supabase/scripts/APORTES_PRESTAMOS_HELPERS.sql`
+
+(RPCs `listar_destinos_aporte` y `mis_prestamos`. La app tiene fallback con service role.)
