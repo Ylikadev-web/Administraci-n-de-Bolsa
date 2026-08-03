@@ -5,7 +5,6 @@ import { humanizeSupabaseError } from "@/lib/errors";
 import { BolsaCard } from "@/app/dashboard/_components/bolsa-card";
 import { BolsaEmpty } from "@/app/dashboard/_components/bolsa-empty";
 import { NuevaBolsaButton } from "@/app/dashboard/_components/nueva-bolsa-button";
-import { PendientesAprobacion } from "@/app/dashboard/_components/pendientes-aprobacion";
 import { CrearBolsaGeneralButton } from "@/app/dashboard/_components/crear-bolsa-general-button";
 import { AsignarBolsaButton } from "@/app/dashboard/_components/asignar-bolsa-button";
 import { SessionRecoverButton } from "@/app/dashboard/_components/session-recover-button";
@@ -61,8 +60,6 @@ export default async function DashboardPage() {
           </NuevaBolsaButton>
         </div>
       </div>
-
-      <PendientesAprobacion />
 
       {friendly && (
         <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">
