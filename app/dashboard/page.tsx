@@ -1,12 +1,14 @@
 import { Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { listMisBolsas } from "@/lib/bolsas/access";
+import { humanizeSupabaseError } from "@/lib/errors";
 import { BolsaCard } from "@/app/dashboard/_components/bolsa-card";
 import { BolsaEmpty } from "@/app/dashboard/_components/bolsa-empty";
 import { NuevaBolsaButton } from "@/app/dashboard/_components/nueva-bolsa-button";
 import { PendientesAprobacion } from "@/app/dashboard/_components/pendientes-aprobacion";
 import { CrearBolsaGeneralButton } from "@/app/dashboard/_components/crear-bolsa-general-button";
 import { AsignarBolsaButton } from "@/app/dashboard/_components/asignar-bolsa-button";
+import { SessionRecoverButton } from "@/app/dashboard/_components/session-recover-button";
 
 export default async function DashboardPage() {
   const supabase = createClient();
@@ -36,6 +38,7 @@ export default async function DashboardPage() {
   const esAdmin = Boolean(perfil?.es_admin);
   const tieneGeneral = items.some((b) => b.es_general);
   const usuarios = otrosUsuarios ?? [];
+  const friendly = error ? humanizeSupabaseError(error) : null;
 
   return (
     <div className="space-y-6">
@@ -61,10 +64,11 @@ export default async function DashboardPage() {
 
       <PendientesAprobacion />
 
-      {error && (
+      {friendly && (
         <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">
-          <p className="font-medium">No pudimos cargar las bolsas.</p>
-          <p className="mt-1 text-xs opacity-80">{error}</p>
+          <p className="font-medium">{friendly.title}</p>
+          <p className="mt-1 text-xs opacity-90">{friendly.detail}</p>
+          {friendly.isSession && <SessionRecoverButton />}
         </div>
       )}
 
