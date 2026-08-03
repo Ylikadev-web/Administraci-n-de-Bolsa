@@ -44,10 +44,12 @@
 | Categorías de usuario | Schema sí; UI pasa `null` |
 | Sub-bolsas (`parent_id`) | Schema sí; UI no |
 | Transferencias internas | Solo RPC |
-| Reportes / plantillas | Solo schema |
+| Reportes / plantillas | Solo schema — **sin pantalla ni menú** |
 | Umbral saldo bajo General | Solo RPC |
 | Notificaciones email/Telegram | Schema / env opcionales |
 | Magic Link E2E en prod | Requiere Site URL + Redirect en Supabase Auth |
+
+**Ya en UI (post-auditoría):** campana de notificaciones para Nesim (aprobar/rechazar 1 o N). Ver `docs/PROGRESO.md`.
 
 ---
 
