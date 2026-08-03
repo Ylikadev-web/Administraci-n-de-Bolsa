@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -29,7 +28,6 @@ const magicSchema = z.object({
 type FormValues = z.infer<typeof passwordSchema>;
 
 export function LoginForm() {
-  const router = useRouter();
   const [method, setMethod] = React.useState<Method>("password");
   const [sent, setSent] = React.useState<string | null>(null);
 
@@ -55,8 +53,8 @@ export function LoginForm() {
         return;
       }
       toast.success("Bienvenido");
-      router.push("/dashboard");
-      router.refresh();
+      // Hard navigation so middleware picks up the session cookie reliably.
+      window.location.assign("/dashboard");
       return;
     }
 
@@ -196,7 +194,7 @@ export function LoginForm() {
 
         <p className="text-center text-xs text-muted-foreground">
           {method === "password"
-            ? "Si usas correos ficticios internos, este es el método correcto."
+            ? "Inicia sesión con el correo y la contraseña de tu cuenta."
             : "Usa esta opción si tu correo es real y quieres recibir un enlace."}
         </p>
       </form>
