@@ -4,9 +4,9 @@ Sistema de bolsas privadas y compartidas para 3 usuarios (Nesim, Moisés e
 Itzyk), con contabilidad auditable, aportes trazables entre usuarios y
 saldos siempre calculados desde los movimientos.
 
-Este PR entrega el **setup base**: proyecto Next.js listo, esquema completo
-de la base de datos con RLS y funciones contables, autenticación por
-Magic Link y estructura de UI con tema claro/oscuro.
+App web funcional: login (contraseña o Magic Link), dashboard de bolsas,
+detalle con ingresos/gastos, aprobación de pendientes (Nesim) y esquema
+Supabase v5 con RLS.
 
 ---
 
@@ -62,11 +62,10 @@ Los otros (Resend, Telegram, Twilio) son opcionales en esta fase.
 Opción A — **desde el dashboard** (más sencillo):
 
 1. Ve a **SQL Editor** en tu proyecto Supabase.
-2. Pega y ejecuta, en orden, cada archivo de `supabase/migrations/`:
-   1. `20260730000001_schema_base.sql`
-   2. `20260730000002_funciones_y_vistas.sql`
-   3. `20260730000003_rls_policies.sql`
-   4. `20260730000004_triggers_y_seeds.sql`
+2. Ejecuta `supabase/apply_all.sql` (o cada archivo de `supabase/migrations/`
+   en orden `…001` → `…004`).
+3. Bootstrap de usuarios de prueba: `supabase/scripts/bootstrap_completo.sql`
+   (o créalos por Admin API; ver cuentas abajo).
 
 Opción B — **con Supabase CLI**:
 
@@ -91,19 +90,18 @@ npm install
 npm run dev
 ```
 
-Abre <http://localhost:3000>. Prueba con "Entrar" y tu correo. Recibirás
-un enlace mágico; al hacer clic entras al dashboard.
+Abre <http://localhost:3000> → **Entrar**.
 
-### 6. Crear la Bolsa General entre los 3
+Usa el login con contraseña o Magic Link. Las credenciales de los tres
+usuarios se crean con `supabase/scripts/bootstrap_completo.sql` (no las
+publiques en la UI ni en chats).
 
-Después de que los tres (Nesim, Moisés, Itzyk) hayan entrado al menos
-una vez con Magic Link (para que sus perfiles existan en `public.perfiles`):
+### 6. Bolsa General
 
-1. Edita `supabase/scripts/bootstrap_bolsa_general.sql` para poner los
-   correos reales de los 3.
-2. Pégalo en **SQL Editor** y ejecuta.
-
-Listo. La Bolsa General ya existe y es visible para los tres.
+El bootstrap completo (`supabase/scripts/bootstrap_completo.sql` o la
+creación vía Admin API) deja creada la **Bolsa General** con los tres
+como co-propietarios. Si falta, Nesim puede ejecutar `crear_bolsa_general`
+desde SQL.
 
 ---
 
