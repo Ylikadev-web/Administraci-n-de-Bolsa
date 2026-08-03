@@ -136,11 +136,11 @@ export function BolsaDialog(props: BolsaDialogProps) {
       <DialogContent className="max-h-[90dvh] max-w-lg overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {mode === "create" ? "Nueva bolsa" : "Editar bolsa"}
+            {mode === "create" ? "Nueva bolsa propia" : "Editar bolsa"}
           </DialogTitle>
           <DialogDescription>
             {mode === "create"
-              ? "Crea una bolsa personal. Solo tú verás su saldo y movimientos."
+              ? "Queda a tu nombre: solo tú eres miembro. Si quieres dar una bolsa a Moisés o Itzyk, usa «Asignar bolsa», no este formulario."
               : "Actualiza los datos visuales y las reglas de tu bolsa."}
           </DialogDescription>
         </DialogHeader>

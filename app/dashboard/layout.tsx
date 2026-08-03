@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LogoutButton } from "@/app/dashboard/logout-button";
 import { UserAvatar } from "@/app/dashboard/user-avatar";
+import { NotificationBell } from "@/app/dashboard/_components/notification-bell";
+import { getSolicitudesPendientesAdmin } from "@/lib/notificaciones/pendientes";
 
 export default async function DashboardLayout({
   children,
@@ -16,11 +18,19 @@ export default async function DashboardLayout({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: perfil } = await supabase
-    .from("perfiles")
-    .select("nombre, email, avatar_url")
-    .eq("id", user.id)
-    .maybeSingle<{ nombre: string; email: string; avatar_url: string | null }>();
+  const [{ data: perfil }, pendientes] = await Promise.all([
+    supabase
+      .from("perfiles")
+      .select("nombre, email, avatar_url, es_admin")
+      .eq("id", user.id)
+      .maybeSingle<{
+        nombre: string;
+        email: string;
+        avatar_url: string | null;
+        es_admin: boolean;
+      }>(),
+    getSolicitudesPendientesAdmin(user.id),
+  ]);
 
   return (
     <div className="min-h-dvh bg-background">
@@ -31,6 +41,9 @@ export default async function DashboardLayout({
             <span className="font-semibold tracking-tight">Bolsas</span>
           </Link>
           <div className="flex items-center gap-1">
+            {pendientes.esAdmin && (
+              <NotificationBell items={pendientes.items} />
+            )}
             <ThemeToggle />
             <UserAvatar
               nombre={perfil?.nombre ?? user.email ?? "Usuario"}

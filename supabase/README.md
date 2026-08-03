@@ -52,7 +52,16 @@ Esperado tras el bootstrap:
 - `admins` = 1 (Nesim)
 - `bolsa_general` = 1
 
+## 4. Seguridad API (vistas UNRESTRICTED)
+
+Si en Table Editor las vistas muestran badge **UNRESTRICTED**, ejecuta de inmediato:
+
+[`scripts/SEGURO_VISTAS_API.sql`](./scripts/SEGURO_VISTAS_API.sql)
+
+Detalle: [`docs/SEGURIDAD-API.md`](../docs/SEGURIDAD-API.md).
+
 ## Cambiar contraseñas después
+
 
 En Supabase Dashboard → **Authentication → Users** → editar el usuario
 → "Send password recovery" (si el correo es real) o "Change password"

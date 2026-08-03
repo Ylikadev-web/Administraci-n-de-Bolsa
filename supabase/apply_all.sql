@@ -496,7 +496,8 @@ $$;
 -- ---------------------------------------------------------------------
 -- VISTAS
 -- ---------------------------------------------------------------------
-create or replace view public.v_saldos_bolsa as
+create or replace view public.v_saldos_bolsa
+with (security_invoker = true) as
 select
   b.id                              as bolsa_id,
   b.nombre                          as bolsa,
@@ -516,7 +517,8 @@ select
   end                               as progreso_meta_pct
 from public.bolsas b;
 
-create or replace view public.v_resumen_mensual_bolsa as
+create or replace view public.v_resumen_mensual_bolsa
+with (security_invoker = true) as
 select
   m.bolsa_id,
   m.mes_contable,
@@ -529,7 +531,8 @@ where m.estado = 'activo'
 group by m.bolsa_id, m.mes_contable;
 
 -- Contribuciones a la Bolsa General por usuario.
-create or replace view public.v_contribuciones_bolsa_general as
+create or replace view public.v_contribuciones_bolsa_general
+with (security_invoker = true) as
 select
   b.id                                                              as bolsa_id,
   m.autor_id                                                        as usuario_id,
@@ -545,7 +548,8 @@ where b.es_general = true
 group by b.id, m.autor_id, p.nombre;
 
 -- Balance de préstamos por par de usuarios (solo activos).
-create or replace view public.v_prestamos_activos as
+create or replace view public.v_prestamos_activos
+with (security_invoker = true) as
 select
   m.id                              as prestamo_id,
   m.autor_id                        as acreedor_id,      -- quien envió el aporte (aporte_enviado)
@@ -583,7 +587,8 @@ where m.tipo = 'aporte_enviado'
   and m.estado = 'activo';
 
 -- Deudas netas entre pares (a partir de préstamos activos con saldo).
-create or replace view public.v_deudas_entre_usuarios as
+create or replace view public.v_deudas_entre_usuarios
+with (security_invoker = true) as
 select
   acreedor_id,
   deudor_id,

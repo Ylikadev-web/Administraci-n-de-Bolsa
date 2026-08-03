@@ -1,19 +1,20 @@
 import { createBrowserClient } from "@supabase/ssr";
 import type { Database } from "@/lib/supabase/types";
 
-function requireEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(
-      `Variable de entorno faltante: ${name}. Configura las variables de Supabase (ver README).`,
-    );
-  }
-  return value;
-}
+/**
+ * IMPORTANT: Next.js only inlines `process.env.NEXT_PUBLIC_*` when the key is
+ * a static string literal. Dynamic access like `process.env[name]` is `undefined`
+ * in the browser and breaks login in production.
+ */
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 export function createClient() {
-  return createBrowserClient<Database>(
-    requireEnv("NEXT_PUBLIC_SUPABASE_URL"),
-    requireEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
-  );
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error(
+      "Faltan NEXT_PUBLIC_SUPABASE_URL o NEXT_PUBLIC_SUPABASE_ANON_KEY. Revisa las variables de entorno en Vercel.",
+    );
+  }
+
+  return createBrowserClient<Database>(supabaseUrl, supabaseAnonKey);
 }
